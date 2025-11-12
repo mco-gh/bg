@@ -1,3 +1,6 @@
+// FIX: Import React to provide type definitions for React.CSSProperties and React.DragEvent.
+import React from 'react';
+
 export enum GameState {
   Landing = 'LANDING',
   Hosting = 'HOSTING',

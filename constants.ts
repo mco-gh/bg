@@ -1,3 +1,5 @@
+// FIX: Import React to provide type definitions for React.CSSProperties.
+import React from 'react';
 import { PointState } from './types';
 
 export const INITIAL_BOARD_STATE: PointState[] = [
