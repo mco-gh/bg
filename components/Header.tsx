@@ -1,36 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { LogoIcon } from './icons/LogoIcon';
 import { CopyIcon } from './icons/CopyIcon';
 
 interface HeaderProps {
+  gameId: string;
   onShowAbout: () => void;
   onShowConfig: () => void;
   onShowConnect: () => void;
   onLogoClick: () => void;
 }
 
-const generateGameId = () => {
-    const chars = 'ABCDEFGHIJKLMNPQRSTUVWXYZ123456789';
-    let result = '';
-    for (let i = 0; i < 3; i++) {
-        for (let j = 0; j < 3; j++) {
-            result += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
-        if (i < 2) result += '-';
-    }
-    return result;
-}
-
-const Header: React.FC<HeaderProps> = ({ onShowAbout, onShowConfig, onShowConnect, onLogoClick }) => {
-  const [gameId, setGameId] = useState('');
+const Header: React.FC<HeaderProps> = ({ gameId, onShowAbout, onShowConfig, onShowConnect, onLogoClick }) => {
   const [copied, setCopied] = useState(false);
-  
-  useEffect(() => {
-      setGameId(generateGameId());
-  }, []);
 
   const handleCopy = () => {
-    if (!navigator.clipboard) return;
+    if (!navigator.clipboard || !gameId) return;
     navigator.clipboard.writeText(gameId).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);

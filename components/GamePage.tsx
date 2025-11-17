@@ -1,15 +1,42 @@
 import React from 'react';
 import BackgammonBoard from './BackgammonBoard';
 import DiceTray from './DiceTray';
+import { PointState, Player } from '../types';
 
-const GamePage: React.FC = () => {
+interface GamePageProps {
+  boardState: PointState[];
+  dice: [number, number] | null;
+  turn: Player | null;
+  playerColor: Player | null;
+  onRollDice: () => void;
+  onMovePiece: (from: number, to: number) => void;
+}
+
+const GamePage: React.FC<GamePageProps> = ({
+  boardState,
+  dice,
+  turn,
+  playerColor,
+  onRollDice,
+  onMovePiece,
+}) => {
   return (
     <div className="w-full flex flex-col md:flex-row items-center md:items-start justify-center gap-8 px-4">
       <div className="w-full max-w-4xl flex-shrink">
-        <BackgammonBoard />
+        <BackgammonBoard
+          boardState={boardState}
+          turn={turn}
+          playerColor={playerColor}
+          onMovePiece={onMovePiece}
+        />
       </div>
       <div className="w-full md:w-auto md:max-w-xs flex-shrink-0">
-        <DiceTray />
+        <DiceTray
+          dice={dice}
+          turn={turn}
+          playerColor={playerColor}
+          onRollDice={onRollDice}
+        />
       </div>
     </div>
   );

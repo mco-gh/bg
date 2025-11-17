@@ -1,38 +1,153 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { io, Socket } from 'socket.io-client';
 import Header from './components/Header';
 import GamePage from './components/GamePage';
 import Modal from './components/Modal';
+import { PointState, Player } from './types';
+import { INITIAL_BOARD_STATE } from './constants';
 
 function App() {
+  // Modal states
   const [showAboutModal, setShowAboutModal] = useState(false);
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [showConnectModal, setShowConnectModal] = useState(false);
-  const [connectGameId, setConnectGameId] = useState('');
+
+  // Config state
   const [backendUrl, setBackendUrl] = useState('https://backend-server-mcodev.replit.app');
 
+  // Game state from server
+  const [socket, setSocket] = useState<Socket | null>(null);
+  const [gameId, setGameId] = useState('');
+  const [connectGameId, setConnectGameId] = useState(''); // For the connect modal input
+  const [boardState, setBoardState] = useState<PointState[]>(INITIAL_BOARD_STATE);
+  const [turn, setTurn] = useState<Player | null>(null);
+  const [playerColor, setPlayerColor] = useState<Player | null>(null);
+  const [dice, setDice] = useState<[number, number] | null>(null);
+  const [gameStatus, setGameStatus] = useState<'connecting' | 'waiting' | 'active' | 'disconnected'>('connecting');
+
+  useEffect(() => {
+    const newSocket = io(backendUrl, {
+      transports: ['websocket'],
+      reconnectionAttempts: 5,
+    });
+    setSocket(newSocket);
+
+    newSocket.on('connect', () => {
+      console.log('Connected to backend:', newSocket.id);
+      newSocket.emit('create-game');
+    });
+
+    newSocket.on('game-created', ({ gameId: newGameId }) => {
+      console.log('Game created with ID:', newGameId);
+      setGameId(newGameId);
+      setGameStatus('waiting');
+      setPlayerColor('white'); // First player is white by default
+    });
+
+    newSocket.on('game-started', (data) => {
+      console.log('Game started:', data);
+      setBoardState(data.boardState);
+      setTurn(data.turn);
+      
+      const myColor = Object.keys(data.players).find(color => data.players[color] === newSocket.id) as Player;
+      setPlayerColor(myColor);
+      setGameStatus('active');
+      setShowConnectModal(false);
+    });
+
+    newSocket.on('board-updated', ({ boardState: newBoardState }) => {
+      setBoardState(newBoardState);
+    });
+
+    newSocket.on('dice-rolled', (data) => {
+      setDice(data.dice);
+      setTurn(data.turn);
+    });
+
+    newSocket.on('new-turn', ({ turn: newTurn }) => {
+      setTurn(newTurn);
+      setDice(null); // Clear dice for the new turn
+    });
+
+    newSocket.on('player-disconnected', () => {
+      setGameStatus('disconnected');
+      alert('Your opponent has disconnected.');
+    });
+
+    newSocket.on('error', ({ message }) => {
+      console.error('Backend error:', message);
+      alert(`Error: ${message}`);
+    });
+    
+    newSocket.on('disconnect', () => {
+      console.log('Disconnected from backend');
+      setGameStatus('disconnected');
+    });
+
+    return () => {
+      newSocket.disconnect();
+    };
+  }, [backendUrl]);
+
   const handleGoHome = () => {
-    // In the future, this could reset the game board.
-    // For now, it does nothing as we are always on the main page.
     window.location.reload();
   };
 
   const handleConnect = () => {
-    // In a real app, this would use the connectGameId to connect to a game session.
-    console.log('Connecting to game:', connectGameId);
-    setShowConnectModal(false);
-    setConnectGameId('');
+    if (socket && connectGameId.trim()) {
+      socket.emit('join-game', { gameId: connectGameId.trim() });
+    }
+  };
+  
+  const handleRollDice = () => {
+    if (socket && turn === playerColor && gameId) {
+      socket.emit('roll-dice', { gameId });
+    }
+  };
+
+  const handleMovePiece = (fromPointIndex: number, toPointIndex: number) => {
+    if (socket && turn === playerColor && gameId) {
+      socket.emit('move-piece', { gameId, fromPointIndex, toPointIndex });
+    }
+  };
+
+  const getStatusMessage = () => {
+    switch (gameStatus) {
+      case 'connecting':
+        return 'Connecting to server...';
+      case 'disconnected':
+        return 'Disconnected. Please refresh to start a new game.';
+      case 'waiting':
+        return 'Waiting for another player to join...';
+      case 'active':
+        return turn === playerColor ? "It's your turn!" : `Waiting for ${turn} to move...`;
+      default:
+        return 'Loading...';
+    }
   };
 
   return (
     <div className="min-h-screen bg-gray-800 flex flex-col font-sans">
       <Header
+        gameId={gameId}
         onShowAbout={() => setShowAboutModal(true)}
         onShowConfig={() => setShowConfigModal(true)}
         onShowConnect={() => setShowConnectModal(true)}
         onLogoClick={handleGoHome}
       />
       <main className="flex-grow flex flex-col items-center justify-center p-4">
-        <GamePage />
+        <div className="w-full max-w-5xl text-center mb-2 p-2 bg-gray-900 rounded-md shadow-lg">
+            <p className="text-lg text-cyan-300 font-semibold">{getStatusMessage()}</p>
+            {playerColor && gameStatus !== 'waiting' && <p className="text-sm text-gray-400">You are playing as {playerColor}.</p>}
+        </div>
+        <GamePage
+          boardState={boardState}
+          dice={dice}
+          turn={turn}
+          playerColor={playerColor}
+          onRollDice={handleRollDice}
+          onMovePiece={handleMovePiece}
+        />
       </main>
       
       <Modal 
