@@ -6,19 +6,23 @@ import { PointState, Player } from '../types';
 interface GamePageProps {
   boardState: PointState[];
   dice: [number, number] | null;
+  movesLeft: number[];
   turn: Player | null;
   playerColor: Player | null;
   onRollDice: () => void;
   onMovePiece: (from: number, to: number) => void;
+  onEndTurn: () => void;
 }
 
 const GamePage: React.FC<GamePageProps> = ({
   boardState,
   dice,
+  movesLeft,
   turn,
   playerColor,
   onRollDice,
   onMovePiece,
+  onEndTurn,
 }) => {
   return (
     <div className="w-full flex flex-col md:flex-row items-center md:items-start justify-center gap-8 px-4">
@@ -28,6 +32,7 @@ const GamePage: React.FC<GamePageProps> = ({
           turn={turn}
           playerColor={playerColor}
           onMovePiece={onMovePiece}
+          movesLeft={movesLeft}
         />
       </div>
       <div className="w-full md:w-auto md:max-w-xs flex-shrink-0">
@@ -36,6 +41,7 @@ const GamePage: React.FC<GamePageProps> = ({
           turn={turn}
           playerColor={playerColor}
           onRollDice={onRollDice}
+          onEndTurn={onEndTurn}
         />
       </div>
     </div>

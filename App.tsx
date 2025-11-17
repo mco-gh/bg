@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 import Header from './components/Header';
 import GamePage from './components/GamePage';
@@ -23,7 +23,10 @@ function App() {
   const [turn, setTurn] = useState<Player | null>(null);
   const [playerColor, setPlayerColor] = useState<Player | null>(null);
   const [dice, setDice] = useState<[number, number] | null>(null);
+  const [movesLeft, setMovesLeft] = useState<number[]>([]);
   const [gameStatus, setGameStatus] = useState<'connecting' | 'waiting' | 'active' | 'disconnected'>('connecting');
+
+  const joiningGameIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     const newSocket = io(backendUrl, {
@@ -46,6 +49,13 @@ function App() {
 
     newSocket.on('game-started', (data) => {
       console.log('Game started:', data);
+      
+      // Re-applied fix: Set gameId for the joining player
+      if (joiningGameIdRef.current) {
+        setGameId(joiningGameIdRef.current);
+        joiningGameIdRef.current = null; // Clear after use
+      }
+
       setBoardState(data.boardState);
       setTurn(data.turn);
       
@@ -62,11 +72,17 @@ function App() {
     newSocket.on('dice-rolled', (data) => {
       setDice(data.dice);
       setTurn(data.turn);
+      if (data.dice[0] === data.dice[1]) { // Doubles
+        setMovesLeft([data.dice[0], data.dice[0], data.dice[0], data.dice[0]]);
+      } else {
+        setMovesLeft(data.dice);
+      }
     });
 
     newSocket.on('new-turn', ({ turn: newTurn }) => {
       setTurn(newTurn);
       setDice(null); // Clear dice for the new turn
+      setMovesLeft([]);
     });
 
     newSocket.on('player-disconnected', () => {
@@ -95,6 +111,7 @@ function App() {
 
   const handleConnect = () => {
     if (socket && connectGameId.trim()) {
+      joiningGameIdRef.current = connectGameId.trim();
       socket.emit('join-game', { gameId: connectGameId.trim() });
     }
   };
@@ -107,7 +124,22 @@ function App() {
 
   const handleMovePiece = (fromPointIndex: number, toPointIndex: number) => {
     if (socket && turn === playerColor && gameId) {
+      // Optimistically update movesLeft
+      const moveDistance = Math.abs(toPointIndex - fromPointIndex);
+      const moveIndex = movesLeft.indexOf(moveDistance);
+      if (moveIndex > -1) {
+        const newMovesLeft = [...movesLeft];
+        newMovesLeft.splice(moveIndex, 1);
+        setMovesLeft(newMovesLeft);
+      }
+      
       socket.emit('move-piece', { gameId, fromPointIndex, toPointIndex });
+    }
+  };
+
+  const handleEndTurn = () => {
+    if (socket && turn === playerColor && gameId) {
+      socket.emit('end-turn', { gameId });
     }
   };
 
@@ -143,10 +175,12 @@ function App() {
         <GamePage
           boardState={boardState}
           dice={dice}
+          movesLeft={movesLeft}
           turn={turn}
           playerColor={playerColor}
           onRollDice={handleRollDice}
           onMovePiece={handleMovePiece}
+          onEndTurn={handleEndTurn}
         />
       </main>
       

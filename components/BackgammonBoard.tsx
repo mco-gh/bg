@@ -13,10 +13,11 @@ interface BackgammonBoardProps {
   boardState: PointState[];
   turn: Player | null;
   playerColor: Player | null;
+  movesLeft: number[];
   onMovePiece: (fromPointIndex: number, toPointIndex: number) => void;
 }
 
-const BackgammonBoard: React.FC<BackgammonBoardProps> = ({ boardState, turn, playerColor, onMovePiece }) => {
+const BackgammonBoard: React.FC<BackgammonBoardProps> = ({ boardState, turn, playerColor, movesLeft, onMovePiece }) => {
   const [draggedItem, setDraggedItem] = useState<DraggedItem | null>(null);
 
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>, fromPointIndex: number, player: Player, totalCheckersAtSource: number) => {
@@ -40,9 +41,44 @@ const BackgammonBoard: React.FC<BackgammonBoardProps> = ({ boardState, turn, pla
     const data = e.dataTransfer.getData('application/json');
     if (!data) return;
 
-    const { fromPointIndex } = JSON.parse(data) as { fromPointIndex: number; player: Player };
+    const { fromPointIndex, player } = JSON.parse(data) as { fromPointIndex: number; player: Player };
 
     if (fromPointIndex === toPointIndex) return;
+
+    // --- START CLIENT-SIDE VALIDATION ---
+    
+    // 1. Check if it's the player's turn, they have rolled, and are moving their own piece
+    if (turn !== playerColor || movesLeft.length === 0 || player !== playerColor) {
+      return; // Silently fail as the piece should not have been draggable.
+    }
+
+    // 2. Check for correct move direction
+    // White moves from lower point numbers to higher point numbers (1 -> 24)
+    if (playerColor === 'white' && toPointIndex < fromPointIndex) {
+      alert('Invalid Move: White checkers must move towards higher point numbers.');
+      return;
+    }
+    // Black moves from higher point numbers to lower point numbers (24 -> 1)
+    if (playerColor === 'black' && toPointIndex > fromPointIndex) {
+      alert('Invalid Move: Black checkers must move towards lower point numbers.');
+      return;
+    }
+
+    // 3. Check if destination point is blocked
+    const destinationPoint = boardState[toPointIndex];
+    if (destinationPoint.player && destinationPoint.player !== playerColor && destinationPoint.checkers > 1) {
+      alert("Invalid Move: You cannot move to a point that is blocked by two or more of your opponent's checkers.");
+      return;
+    }
+
+    // 4. Check if the move distance matches one of the available moves.
+    const moveDistance = Math.abs(toPointIndex - fromPointIndex);
+    if (!movesLeft.includes(moveDistance)) {
+        alert(`Invalid Move: Move of ${moveDistance} spaces does not match your available moves (${movesLeft.join(', ')}).`);
+        return;
+    }
+
+    // --- END CLIENT-SIDE VALIDATION ---
 
     onMovePiece(fromPointIndex, toPointIndex);
   };
@@ -106,7 +142,7 @@ const BackgammonBoard: React.FC<BackgammonBoardProps> = ({ boardState, turn, pla
             const isMyTurn = turn === playerColor;
             const isMyChecker = point.player === playerColor;
             const isTopCheckerOnBoard = point.player !== null && stackIndex === point.checkers - 1;
-            const isDraggable = isMyTurn && isMyChecker && isTopCheckerOnBoard;
+            const isDraggable = isMyTurn && movesLeft.length > 0 && isMyChecker && isTopCheckerOnBoard;
 
             return (
               <Checker
