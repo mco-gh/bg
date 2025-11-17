@@ -8,6 +8,7 @@ function App() {
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [showConnectModal, setShowConnectModal] = useState(false);
   const [connectGameId, setConnectGameId] = useState('');
+  const [backendUrl, setBackendUrl] = useState('https://backend-server-mcodev.replit.app');
 
   const handleGoHome = () => {
     // In the future, this could reset the game board.
@@ -53,7 +54,24 @@ function App() {
         onClose={() => setShowConfigModal(false)}
         title="Configuration"
       >
-        <p className="text-gray-400">Configuration settings will be available here in a future update.</p>
+        <div className="space-y-4">
+          <div>
+            <label htmlFor="backendUrlInput" className="block text-left text-gray-300 font-medium mb-2">
+              Backend Service URL
+            </label>
+            <input
+              type="text"
+              id="backendUrlInput"
+              value={backendUrl}
+              onChange={(e) => setBackendUrl(e.target.value)}
+              placeholder="Enter backend service URL"
+              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+            />
+            <p className="text-gray-400 mt-2 text-sm">
+              This URL is used to connect to the game server for multiplayer functionality.
+            </p>
+          </div>
+        </div>
       </Modal>
 
       <Modal 
