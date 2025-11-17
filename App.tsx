@@ -1,32 +1,25 @@
 import React, { useState } from 'react';
 import Header from './components/Header';
-import LandingPage from './components/LandingPage';
 import GamePage from './components/GamePage';
 import Modal from './components/Modal';
-import { GameState } from './types';
 
 function App() {
-  const [gameState, setGameState] = useState<GameState>(GameState.Landing);
   const [showAboutModal, setShowAboutModal] = useState(false);
   const [showConfigModal, setShowConfigModal] = useState(false);
+  const [showConnectModal, setShowConnectModal] = useState(false);
+  const [connectGameId, setConnectGameId] = useState('');
 
-  const handleStartGame = (state: GameState) => {
-    setGameState(state);
-  };
-  
   const handleGoHome = () => {
-    setGameState(GameState.Landing);
+    // In the future, this could reset the game board.
+    // For now, it does nothing as we are always on the main page.
+    window.location.reload();
   };
 
-  const renderContent = () => {
-    switch (gameState) {
-      case GameState.Hosting:
-      case GameState.Connected:
-        return <GamePage />;
-      case GameState.Landing:
-      default:
-        return <LandingPage onStartGame={handleStartGame} />;
-    }
+  const handleConnect = () => {
+    // In a real app, this would use the connectGameId to connect to a game session.
+    console.log('Connecting to game:', connectGameId);
+    setShowConnectModal(false);
+    setConnectGameId('');
   };
 
   return (
@@ -34,10 +27,11 @@ function App() {
       <Header
         onShowAbout={() => setShowAboutModal(true)}
         onShowConfig={() => setShowConfigModal(true)}
+        onShowConnect={() => setShowConnectModal(true)}
         onLogoClick={handleGoHome}
       />
       <main className="flex-grow flex flex-col items-center justify-center p-4">
-        {renderContent()}
+        <GamePage />
       </main>
       
       <Modal 
@@ -50,8 +44,7 @@ function App() {
           The interface is designed to be intuitive and realistic, providing a great virtual tabletop experience.
         </p>
         <p className="mt-4 text-gray-300">
-          To start, one player must host a new game. They will receive a unique Game URL to share with their opponent. 
-          The second player uses this URL to connect to the game session.
+          To play with a friend, copy your Game ID from the header and send it to them. They can use the 'Connect' button to join your game.
         </p>
       </Modal>
 
@@ -61,6 +54,35 @@ function App() {
         title="Configuration"
       >
         <p className="text-gray-400">Configuration settings will be available here in a future update.</p>
+      </Modal>
+
+      <Modal 
+        isOpen={showConnectModal} 
+        onClose={() => setShowConnectModal(false)}
+        title="Connect to Game"
+      >
+        <div className="space-y-4">
+          <div>
+            <label htmlFor="gameIdInput" className="block text-left text-gray-300 font-medium mb-2">
+              Game ID
+            </label>
+            <input
+              type="text"
+              id="gameIdInput"
+              value={connectGameId}
+              onChange={(e) => setConnectGameId(e.target.value)}
+              placeholder="Enter friend's Game ID"
+              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+            />
+          </div>
+          <button
+            onClick={handleConnect}
+            disabled={!connectGameId.trim()}
+            className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg text-lg transition-transform transform hover:scale-105 disabled:bg-gray-600 disabled:cursor-not-allowed disabled:transform-none"
+          >
+            Connect
+          </button>
+        </div>
       </Modal>
     </div>
   );

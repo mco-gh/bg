@@ -1,10 +1,10 @@
 // FIX: Import React to provide type definitions for React.CSSProperties and React.DragEvent.
 import React from 'react';
 
+// FIX: Define and export the GameState enum as it is used in LandingPage.tsx.
 export enum GameState {
-  Landing = 'LANDING',
-  Hosting = 'HOSTING',
-  Connected = 'CONNECTED',
+  Hosting,
+  Connected,
 }
 
 export type Player = 'white' | 'black';
