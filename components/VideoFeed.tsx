@@ -26,15 +26,19 @@ const VideoFeed: React.FC<VideoFeedProps> = ({ gameId, playerColor, gameActive }
 
   // Attach Local Stream to Video Element when stream/element is ready
   useEffect(() => {
-    if (localVideoRef.current && localStream) {
-      localVideoRef.current.srcObject = localStream;
+    const videoEl = localVideoRef.current;
+    if (videoEl && localStream) {
+      videoEl.srcObject = localStream;
+      videoEl.play().catch(e => console.error("Local video play error:", e));
     }
   }, [localStream]);
 
   // Attach Remote Stream to Video Element when stream/element is ready
   useEffect(() => {
-    if (remoteVideoRef.current && remoteStream) {
-      remoteVideoRef.current.srcObject = remoteStream;
+    const videoEl = remoteVideoRef.current;
+    if (videoEl && remoteStream) {
+      videoEl.srcObject = remoteStream;
+      videoEl.play().catch(e => console.error("Remote video play error:", e));
     }
   }, [remoteStream]);
 
@@ -64,8 +68,6 @@ const VideoFeed: React.FC<VideoFeedProps> = ({ gameId, playerColor, gameActive }
         
         if (mounted) {
           setLocalStream(stream);
-          // Note: We do not attach srcObject here anymore. 
-          // The useEffect above handles it once the video element renders.
         } else {
           // Component unmounted during await
           stream.getTracks().forEach(t => t.stop());
@@ -159,7 +161,7 @@ const VideoFeed: React.FC<VideoFeedProps> = ({ gameId, playerColor, gameActive }
             if (!mounted) return;
             console.log('Incoming call from:', call.peer);
             // Accept call
-            call.answer(localStream);
+            call.answer(localStream!);
             handleCall(call);
         });
 
@@ -193,7 +195,9 @@ const VideoFeed: React.FC<VideoFeedProps> = ({ gameId, playerColor, gameActive }
         if (activeCallRef.current && activeCallRef.current.open) return;
 
         setStatus('Calling opponent...');
-        const call = peerRef.current.call(opponentPeerId, localStream);
+        // TS says localStream might be null, but dependency array checks it.
+        // We cast to MediaStream to satisfy TS.
+        const call = peerRef.current.call(opponentPeerId, localStream!);
         handleCall(call);
 
         // Setup retry loop in case opponent isn't there yet
@@ -218,9 +222,7 @@ const VideoFeed: React.FC<VideoFeedProps> = ({ gameId, playerColor, gameActive }
             setStatus('Connected');
             setError(null);
             setRemoteStream(stream);
-            // Note: We do not attach srcObject here anymore.
-            // The useEffect above handles it once the video element renders.
-
+            
             // Clear any pending retries
             if (callRetryTimeoutRef.current) clearTimeout(callRetryTimeoutRef.current);
         });
@@ -255,6 +257,7 @@ const VideoFeed: React.FC<VideoFeedProps> = ({ gameId, playerColor, gameActive }
         {/* Remote Video (Main View) */}
         {remoteStream ? (
              <video 
+                key={remoteStream.id}
                 ref={remoteVideoRef} 
                 autoPlay 
                 playsInline 
@@ -289,6 +292,7 @@ const VideoFeed: React.FC<VideoFeedProps> = ({ gameId, playerColor, gameActive }
         <div className="absolute bottom-2 right-2 w-1/3 max-w-[100px] aspect-video bg-gray-800 rounded border border-gray-600 overflow-hidden shadow-md transition-transform hover:scale-110 z-10">
             {localStream ? (
                 <video 
+                    key={localStream.id}
                     ref={localVideoRef} 
                     autoPlay 
                     playsInline 

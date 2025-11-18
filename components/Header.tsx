@@ -22,9 +22,9 @@ const Header: React.FC<HeaderProps> = ({ gameId, onShowAbout, onShowConfig, onSh
 
   return (
     <header className="w-full bg-gray-900 shadow-lg p-3">
-      <div className="container mx-auto flex items-center">
+      <div className="container mx-auto flex items-center justify-between">
         {/* Left: Title (Logo moved to main body) */}
-        <div className="flex-1 flex items-center justify-start min-w-0">
+        <div className="flex items-center justify-start min-w-0">
           <a 
             href="/"
             className="flex items-center cursor-pointer"
@@ -48,23 +48,23 @@ const Header: React.FC<HeaderProps> = ({ gameId, onShowAbout, onShowConfig, onSh
         </div>
 
         {/* Right: Navigation Buttons */}
-        <div className="flex-1 flex items-center justify-end">
+        <div className="flex items-center justify-end">
           <nav className="flex items-center space-x-2 sm:space-x-3">
             <button 
               onClick={onShowConnect} 
-              className="px-2.5 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors"
+              className="px-2.5 py-2 text-[17px] font-medium text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors"
             >
                Connect
             </button>
             <button 
               onClick={onShowConfig} 
-              className="px-2.5 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors"
+              className="px-2.5 py-2 text-[17px] font-medium text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors"
             >
               Config
             </button>
             <button 
               onClick={onShowAbout} 
-              className="px-2.5 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors"
+              className="px-2.5 py-2 text-[17px] font-medium text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors"
             >
               About
             </button>
