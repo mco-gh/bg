@@ -167,8 +167,8 @@ function App() {
         onShowConnect={() => setShowConnectModal(true)}
         onLogoClick={handleGoHome}
       />
-      <main className="flex-grow flex flex-col items-center justify-center p-4">
-        <div className="w-full max-w-5xl text-center mb-2 p-2 bg-gray-900 rounded-md shadow-lg">
+      <main className="flex-grow flex flex-col items-center pt-8 px-4 pb-4 gap-8">
+        <div className="w-full max-w-5xl text-center p-3 bg-gray-900 rounded-md shadow-lg">
             <p className="text-lg text-cyan-300 font-semibold">{getStatusMessage()}</p>
             {playerColor && gameStatus !== 'waiting' && <p className="text-sm text-gray-400">You are playing as {playerColor}.</p>}
         </div>
