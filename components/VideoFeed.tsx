@@ -174,7 +174,7 @@ const VideoFeed: React.FC<VideoFeedProps> = ({ gameId, playerColor, gameActive }
   };
 
   return (
-    <div className="w-full bg-black rounded-lg border-2 border-gray-700 aspect-video relative overflow-hidden shadow-lg group">
+    <div className="w-full h-full bg-black rounded-lg border-2 border-gray-700 aspect-video relative overflow-hidden shadow-lg group">
         {/* Remote Video (Main View) */}
         {remoteStream ? (
              <video 

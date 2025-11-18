@@ -30,7 +30,7 @@ const DiceTray: React.FC<DiceTrayProps> = ({ dice, turn, playerColor, onRollDice
   };
 
   return (
-    <div className="flex flex-col items-center justify-center p-4 space-y-6 bg-gray-900/50 rounded-lg shadow-inner w-full md:w-auto md:min-w-[200px]">
+    <div className="flex flex-col items-center justify-center p-4 space-y-6 bg-gray-900/50 rounded-lg shadow-inner w-full h-full md:w-full md:h-auto">
       <div className="h-24 flex items-center justify-center space-x-4">
         {dice && !isRolling && (
           <>
