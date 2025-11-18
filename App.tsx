@@ -185,10 +185,10 @@ function App() {
       <Modal 
         isOpen={showAboutModal} 
         onClose={() => setShowAboutModal(false)}
-        title="About BackGammon"
+        title="About MACgammon"
       >
         <p className="text-gray-300">
-          This application allows two players to enjoy a game of backgammon online. 
+          MACgammon allows two players to enjoy a game of backgammon online. 
           The interface is designed to be intuitive and realistic, providing a great virtual tabletop experience.
         </p>
         <p className="mt-4 text-gray-300">
