@@ -1,6 +1,7 @@
 import React from 'react';
 import BackgammonBoard from './BackgammonBoard';
 import DiceTray from './DiceTray';
+import VideoFeed from './VideoFeed';
 import { PointState, Player } from '../types';
 
 interface GamePageProps {
@@ -35,14 +36,19 @@ const GamePage: React.FC<GamePageProps> = ({
           movesLeft={movesLeft}
         />
       </div>
-      <div className="w-full md:w-auto md:max-w-xs flex-shrink-0">
-        <DiceTray
-          dice={dice}
-          turn={turn}
-          playerColor={playerColor}
-          onRollDice={onRollDice}
-          onEndTurn={onEndTurn}
-        />
+      <div className="w-full md:w-80 flex-shrink-0 flex flex-row md:flex-col gap-4 md:gap-6">
+        <div className="flex-1 md:flex-none w-full">
+          <VideoFeed />
+        </div>
+        <div className="flex-1 md:flex-none w-full">
+          <DiceTray
+            dice={dice}
+            turn={turn}
+            playerColor={playerColor}
+            onRollDice={onRollDice}
+            onEndTurn={onEndTurn}
+          />
+        </div>
       </div>
     </div>
   );
