@@ -181,7 +181,7 @@ function App() {
                 {/* Short About Text - Reduced padding to p-2, font to text-base */}
                 <div className="flex-grow bg-gray-800/50 rounded-md border border-gray-700 p-2 text-center shadow-sm flex flex-col justify-center">
                      <p className="text-gray-200 text-base font-bold leading-relaxed">
-                        Experience realistic online backgammon. Share your Game ID to play with a friend!
+                        Share your Game ID to play backgammon with a friend!
                      </p>
                 </div>
 
