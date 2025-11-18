@@ -1,4 +1,4 @@
-# Online Backgammon
+# BackGammon
 
 This project is a web application that allows two people to play backgammon together online using a realistic, interactive playing surface.
 

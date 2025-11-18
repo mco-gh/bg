@@ -187,7 +187,7 @@ function App() {
       <Modal 
         isOpen={showAboutModal} 
         onClose={() => setShowAboutModal(false)}
-        title="About Online Backgammon"
+        title="About BackGammon"
       >
         <p className="text-gray-300">
           This application allows two players to enjoy a game of backgammon online. 

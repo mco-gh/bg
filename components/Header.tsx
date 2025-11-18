@@ -29,8 +29,8 @@ const Header: React.FC<HeaderProps> = ({ gameId, onShowAbout, onShowConfig, onSh
           onClick={onLogoClick}
           aria-label="Go to homepage"
         >
-          <LogoIcon className="h-10 w-10 text-cyan-400" />
-          <span className="hidden sm:block text-2xl font-bold tracking-wider text-white">Online Backgammon</span>
+          <LogoIcon className="h-10 w-10" />
+          <span className="hidden sm:block text-2xl font-bold tracking-wider text-white">BackGammon</span>
         </div>
 
         <nav className="flex items-center space-x-2 sm:space-x-4">

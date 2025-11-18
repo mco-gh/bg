@@ -1,5 +1,5 @@
 {
-  "name": "Online Backgammon",
+  "name": "BackGammon",
   "description": "A web application that allows two people to play backgammon together online using a realistic animated playing surface.",
   "requestFramePermissions": []
 }
