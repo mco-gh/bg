@@ -5,6 +5,7 @@ import VideoFeed from './VideoFeed';
 import { PointState, Player } from '../types';
 
 interface GamePageProps {
+  gameId: string;
   boardState: PointState[];
   dice: [number, number] | null;
   movesLeft: number[];
@@ -13,9 +14,11 @@ interface GamePageProps {
   onRollDice: () => void;
   onMovePiece: (from: number, to: number) => void;
   onEndTurn: () => void;
+  gameActive: boolean;
 }
 
 const GamePage: React.FC<GamePageProps> = ({
+  gameId,
   boardState,
   dice,
   movesLeft,
@@ -24,6 +27,7 @@ const GamePage: React.FC<GamePageProps> = ({
   onRollDice,
   onMovePiece,
   onEndTurn,
+  gameActive,
 }) => {
   return (
     <div className="w-full flex flex-col md:flex-row items-center md:items-start justify-center gap-8 px-4">
@@ -38,7 +42,7 @@ const GamePage: React.FC<GamePageProps> = ({
       </div>
       <div className="w-full md:w-80 flex-shrink-0 flex flex-row md:flex-col gap-4 md:gap-6">
         <div className="flex-1 md:flex-none w-full">
-          <VideoFeed />
+          <VideoFeed gameId={gameId} playerColor={playerColor} gameActive={gameActive} />
         </div>
         <div className="flex-1 md:flex-none w-full">
           <DiceTray

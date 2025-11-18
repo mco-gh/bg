@@ -173,6 +173,7 @@ function App() {
             {playerColor && gameStatus !== 'waiting' && <p className="text-sm text-gray-400">You are playing as {playerColor}.</p>}
         </div>
         <GamePage
+          gameId={gameId}
           boardState={boardState}
           dice={dice}
           movesLeft={movesLeft}
@@ -181,6 +182,7 @@ function App() {
           onRollDice={handleRollDice}
           onMovePiece={handleMovePiece}
           onEndTurn={handleEndTurn}
+          gameActive={gameStatus === 'active'}
         />
       </main>
       
