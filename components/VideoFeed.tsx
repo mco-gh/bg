@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Peer } from 'peerjs';
 import type { MediaConnection } from 'peerjs';
@@ -22,6 +23,20 @@ const VideoFeed: React.FC<VideoFeedProps> = ({ gameId, playerColor, gameActive }
   const peerRef = useRef<Peer | null>(null);
   const activeCallRef = useRef<MediaConnection | null>(null);
   const callRetryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Attach Local Stream to Video Element when stream/element is ready
+  useEffect(() => {
+    if (localVideoRef.current && localStream) {
+      localVideoRef.current.srcObject = localStream;
+    }
+  }, [localStream]);
+
+  // Attach Remote Stream to Video Element when stream/element is ready
+  useEffect(() => {
+    if (remoteVideoRef.current && remoteStream) {
+      remoteVideoRef.current.srcObject = remoteStream;
+    }
+  }, [remoteStream]);
 
   // 1. Handle Media Stream (Camera/Mic)
   useEffect(() => {
@@ -49,11 +64,8 @@ const VideoFeed: React.FC<VideoFeedProps> = ({ gameId, playerColor, gameActive }
         
         if (mounted) {
           setLocalStream(stream);
-          if (localVideoRef.current) {
-            localVideoRef.current.srcObject = stream;
-            // Mute local video to prevent feedback
-            localVideoRef.current.muted = true;
-          }
+          // Note: We do not attach srcObject here anymore. 
+          // The useEffect above handles it once the video element renders.
         } else {
           // Component unmounted during await
           stream.getTracks().forEach(t => t.stop());
@@ -206,9 +218,9 @@ const VideoFeed: React.FC<VideoFeedProps> = ({ gameId, playerColor, gameActive }
             setStatus('Connected');
             setError(null);
             setRemoteStream(stream);
-            if (remoteVideoRef.current) {
-                remoteVideoRef.current.srcObject = stream;
-            }
+            // Note: We do not attach srcObject here anymore.
+            // The useEffect above handles it once the video element renders.
+
             // Clear any pending retries
             if (callRetryTimeoutRef.current) clearTimeout(callRetryTimeoutRef.current);
         });
