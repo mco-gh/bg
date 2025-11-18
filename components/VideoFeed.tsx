@@ -15,6 +15,7 @@ const VideoFeed: React.FC<VideoFeedProps> = ({ gameId, playerColor, gameActive }
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string>('Initializing...');
   const [retryPeerTrigger, setRetryPeerTrigger] = useState(0);
+  const [mediaRetryTrigger, setMediaRetryTrigger] = useState(0);
   
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -29,10 +30,22 @@ const VideoFeed: React.FC<VideoFeedProps> = ({ gameId, playerColor, gameActive }
 
     const startStream = async () => {
       if (!gameActive) return;
+
+      // Check if API is available (requires HTTPS)
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        if (mounted) setError('Media API unavailable. HTTPS required?');
+        return;
+      }
       
       try {
         setStatus('Accessing camera...');
-        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        setError(null);
+
+        // Explicitly request front camera for mobile compatibility
+        stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: 'user' }, 
+            audio: true 
+        });
         
         if (mounted) {
           setLocalStream(stream);
@@ -45,9 +58,23 @@ const VideoFeed: React.FC<VideoFeedProps> = ({ gameId, playerColor, gameActive }
           // Component unmounted during await
           stream.getTracks().forEach(t => t.stop());
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error('Media access error:', err);
-        if (mounted) setError('Could not access camera/mic. Check permissions.');
+        if (mounted) {
+            let msg = 'Could not access camera/mic.';
+            if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                msg = 'Permission denied. Allow camera access in browser settings.';
+            } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+                msg = 'No camera or microphone found.';
+            } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+                msg = 'Camera/mic is in use by another app.';
+            } else if (err.name === 'SecurityError' || err.name === 'TypeError') {
+                msg = 'Secure context required (HTTPS).';
+            } else if (err.name === 'OverconstrainedError') {
+                msg = 'Camera constraints not met.';
+            }
+            setError(msg);
+        }
       }
     };
 
@@ -60,7 +87,7 @@ const VideoFeed: React.FC<VideoFeedProps> = ({ gameId, playerColor, gameActive }
       }
       setLocalStream(null);
     };
-  }, [gameActive]);
+  }, [gameActive, mediaRetryTrigger]);
 
   // 2. Handle PeerJS Connection
   useEffect(() => {
@@ -224,9 +251,17 @@ const VideoFeed: React.FC<VideoFeedProps> = ({ gameId, playerColor, gameActive }
         ) : (
             <div className="w-full h-full flex flex-col items-center justify-center text-gray-500 p-4 text-center">
                  {error ? (
-                     <div className="text-red-400 text-sm">
-                        <p className="font-bold mb-1">Video Error</p>
-                        {error}
+                     <div className="text-red-400 text-sm flex flex-col items-center gap-2">
+                        <div>
+                            <p className="font-bold">Video Error</p>
+                            {error}
+                        </div>
+                        <button 
+                            onClick={() => setMediaRetryTrigger(n => n + 1)}
+                            className="px-3 py-1 bg-red-500/20 hover:bg-red-500/40 text-red-200 text-xs rounded border border-red-500/50 transition-colors"
+                        >
+                            Retry Camera
+                        </button>
                      </div>
                  ) : (
                     <>
