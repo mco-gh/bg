@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Peer, MediaConnection } from 'peerjs';
+import { Peer } from 'peerjs';
+import type { MediaConnection } from 'peerjs';
 import { Player } from '../types';
 
 interface VideoFeedProps {
@@ -13,165 +14,202 @@ const VideoFeed: React.FC<VideoFeedProps> = ({ gameId, playerColor, gameActive }
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string>('Initializing...');
+  const [retryPeerTrigger, setRetryPeerTrigger] = useState(0);
   
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const peerRef = useRef<Peer | null>(null);
   const activeCallRef = useRef<MediaConnection | null>(null);
-  // FIX: Use ReturnType<typeof setTimeout> instead of NodeJS.Timeout to be environment agnostic
-  const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const callRetryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // 1. Handle Media Stream (Camera/Mic)
   useEffect(() => {
-    // Reset state when game details change
-    setRemoteStream(null);
-    setError(null);
-    
-    // Cleanup previous peer instances
-    if (peerRef.current) {
-      peerRef.current.destroy();
-      peerRef.current = null;
-    }
+    let mounted = true;
+    let stream: MediaStream | null = null;
 
-    if (!gameId || !playerColor || !gameActive) {
-      setStatus(gameId ? 'Waiting for opponent...' : 'Initializing...');
+    const startStream = async () => {
+      if (!gameActive) return;
+      
+      try {
+        setStatus('Accessing camera...');
+        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        
+        if (mounted) {
+          setLocalStream(stream);
+          if (localVideoRef.current) {
+            localVideoRef.current.srcObject = stream;
+            // Mute local video to prevent feedback
+            localVideoRef.current.muted = true;
+          }
+        } else {
+          // Component unmounted during await
+          stream.getTracks().forEach(t => t.stop());
+        }
+      } catch (err) {
+        console.error('Media access error:', err);
+        if (mounted) setError('Could not access camera/mic. Check permissions.');
+      }
+    };
+
+    startStream();
+
+    return () => {
+      mounted = false;
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+      setLocalStream(null);
+    };
+  }, [gameActive]);
+
+  // 2. Handle PeerJS Connection
+  useEffect(() => {
+    if (!gameId || !playerColor || !gameActive || !localStream) {
+      if (!gameActive) setStatus('Idle');
       return;
     }
 
-    // --- Deterministic Peer ID Strategy ---
-    // Both players independently generate "phone numbers" based on the shared Game ID.
-    // This allows them to find each other without a dedicated signaling database.
-    // White -> bg-game-{id}-white
-    // Black -> bg-game-{id}-black
-    const myPeerId = `bg-game-${gameId}-${playerColor}`;
-    const opponentPeerId = `bg-game-${gameId}-${playerColor === 'white' ? 'black' : 'white'}`;
+    let mounted = true;
 
-    const initPeer = async () => {
-      try {
-        setStatus('Accessing camera...');
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-        setLocalStream(stream);
-        
-        if (localVideoRef.current) {
-          localVideoRef.current.srcObject = stream;
-        }
+    // Cleanup function for this effect
+    const cleanup = () => {
+      if (callRetryTimeoutRef.current) clearTimeout(callRetryTimeoutRef.current);
+      if (activeCallRef.current) {
+        activeCallRef.current.close();
+        activeCallRef.current = null;
+      }
+      if (peerRef.current) {
+        peerRef.current.destroy();
+        peerRef.current = null;
+      }
+      setRemoteStream(null);
+    };
 
-        setStatus('Connecting to video server...');
+    cleanup(); // Ensure clean slate before starting
+
+    // Sanitize Game ID for PeerJS compatibility (alphanumeric + dashes)
+    const cleanGameId = gameId.replace(/[^a-zA-Z0-9]/g, '-');
+    const myPeerId = `bg-game-${cleanGameId}-${playerColor}`;
+    const opponentPeerId = `bg-game-${cleanGameId}-${playerColor === 'white' ? 'black' : 'white'}`;
+
+    const initPeer = () => {
+        setStatus('Connecting to signaling server...');
         
         const peer = new Peer(myPeerId, {
-          debug: 1,
+            debug: 1,
+            config: {
+                iceServers: [
+                    { urls: 'stun:stun.l.google.com:19302' },
+                    { urls: 'stun:global.stun.twilio.com:3478' }
+                ]
+            }
         });
         peerRef.current = peer;
 
         peer.on('open', (id) => {
-          console.log('My Peer ID is active:', id);
-          setStatus('Waiting for opponent...');
-          
-          // --- Connection Logic ---
-          // To prevent race conditions, we assign roles:
-          // White is the CALLER (Initiator).
-          // Black is the CALLEE (Listener).
-          if (playerColor === 'white') {
-             startCalling(peer, opponentPeerId, stream);
-          }
+            if (!mounted) return;
+            console.log('My Peer ID:', id);
+            setStatus('Waiting for opponent...');
+            
+            if (playerColor === 'white') {
+                startCalling();
+            }
         });
 
-        // Handle incoming calls (This mostly applies to Black, or if connection drops and re-dials)
         peer.on('call', (call) => {
-          console.log('Received incoming call from', call.peer);
-          // Answer the call with our local stream
-          call.answer(stream);
-          handleCall(call);
+            if (!mounted) return;
+            console.log('Incoming call from:', call.peer);
+            // Accept call
+            call.answer(localStream);
+            handleCall(call);
         });
 
-        peer.on('error', (err) => {
-          console.error('PeerJS error:', err);
+        peer.on('error', (err: any) => {
+            if (!mounted) return;
+            console.warn('PeerJS Error:', err.type, err);
 
-          // 'unavailable-id': The ID we want is taken (maybe we refreshed fast).
-          // 'peer-unavailable': The person we are calling isn't online yet.
-          // In both cases, these are temporary state issues, not fatal errors.
-          if (err.type === 'unavailable-id') {
-             // We likely didn't clean up fast enough on reload. 
-             // The server will eventually timeout the old ID.
-             setStatus('ID conflict, retrying...');
-          } else if (err.type === 'peer-unavailable') {
-             // This happens when White calls Black, but Black hasn't loaded the page yet.
-             // We silently ignore this and let the retry loop in startCalling handle it.
-             setStatus('Waiting for opponent to join...');
-             
-             // If we are the caller, ensure we retry
-             if (playerColor === 'white' && peerRef.current && localStream) {
-                clearTimeout(retryTimeoutRef.current!);
-                retryTimeoutRef.current = setTimeout(() => {
-                    startCalling(peerRef.current!, opponentPeerId, localStream);
+            if (err.type === 'unavailable-id') {
+                setStatus('ID taken. Retrying...');
+                // ID is locked (likely from previous session). Retry completely after delay.
+                setTimeout(() => {
+                    if (mounted) setRetryPeerTrigger(n => n + 1);
                 }, 2000);
-             }
-          } else {
-             // Actual errors (network, webrtc, etc.)
-             setError(`Connection error: ${err.type}`);
-          }
+            } else if (err.type === 'peer-unavailable') {
+                // Expected when calling an opponent who hasn't joined yet.
+                // The startCalling retry loop handles this.
+                setStatus('Opponent not online yet...');
+            } else if (err.type === 'network' || err.type === 'disconnected') {
+                 setError('Network connection lost.');
+            } else {
+                 // Other fatal errors
+                 console.error('Fatal PeerJS Error', err);
+            }
+        });
+    };
+
+    const startCalling = () => {
+        if (!mounted || !peerRef.current || peerRef.current.destroyed) return;
+        
+        // Don't call if we already have a connection
+        if (activeCallRef.current && activeCallRef.current.open) return;
+
+        setStatus('Calling opponent...');
+        const call = peerRef.current.call(opponentPeerId, localStream);
+        handleCall(call);
+
+        // Setup retry loop in case opponent isn't there yet
+        // We only want to retry if WE are the caller (White) and connection isn't established
+        if (callRetryTimeoutRef.current) clearTimeout(callRetryTimeoutRef.current);
+        callRetryTimeoutRef.current = setTimeout(() => {
+            if (mounted && (!activeCallRef.current || !activeCallRef.current.open)) {
+                startCalling();
+            }
+        }, 3000);
+    };
+
+    const handleCall = (call: MediaConnection) => {
+        if (activeCallRef.current && activeCallRef.current !== call) {
+            activeCallRef.current.close();
+        }
+        activeCallRef.current = call;
+
+        call.on('stream', (stream) => {
+            if (!mounted) return;
+            console.log('Received remote stream');
+            setStatus('Connected');
+            setError(null);
+            setRemoteStream(stream);
+            if (remoteVideoRef.current) {
+                remoteVideoRef.current.srcObject = stream;
+            }
+            // Clear any pending retries
+            if (callRetryTimeoutRef.current) clearTimeout(callRetryTimeoutRef.current);
         });
 
-      } catch (err) {
-        console.error('Media access error:', err);
-        setError('Could not access camera/mic.');
-      }
+        call.on('close', () => {
+            if (!mounted) return;
+            setStatus('Opponent disconnected');
+            setRemoteStream(null);
+            activeCallRef.current = null;
+            // If we are White, restart calling loop
+            if (playerColor === 'white') {
+                startCalling();
+            }
+        });
+
+        call.on('error', (err) => {
+             console.error('Call error:', err);
+             activeCallRef.current = null;
+        });
     };
 
     initPeer();
 
     return () => {
-      // Cleanup on unmount
-      if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
-      if (activeCallRef.current) activeCallRef.current.close();
-      if (peerRef.current) peerRef.current.destroy();
-      if (localStream) {
-        localStream.getTracks().forEach(track => track.stop());
-      }
+        mounted = false;
+        cleanup();
     };
-  }, [gameId, playerColor, gameActive]);
-
-  const startCalling = (peer: Peer, opponentId: string, stream: MediaStream) => {
-    // Don't call if we already have a healthy connection
-    if (activeCallRef.current && activeCallRef.current.open) return;
-
-    setStatus('Calling opponent...');
-    
-    // Initiate the call
-    const call = peer.call(opponentId, stream);
-    handleCall(call);
-  };
-
-  const handleCall = (call: MediaConnection) => {
-      // If we have an existing call that's stuck, close it
-      if (activeCallRef.current && activeCallRef.current !== call) {
-          activeCallRef.current.close();
-      }
-      
-      activeCallRef.current = call;
-
-      call.on('stream', (remoteStream) => {
-          setStatus('Connected');
-          setError(null);
-          setRemoteStream(remoteStream);
-          if (remoteVideoRef.current) {
-              remoteVideoRef.current.srcObject = remoteStream;
-          }
-      });
-
-      call.on('close', () => {
-          setRemoteStream(null);
-          setStatus('Opponent disconnected.');
-          activeCallRef.current = null;
-          // If we were the caller (White), the useEffect cleanup or retry logic 
-          // isn't automatically triggered here unless we trigger a state change 
-          // or if the 'peer-unavailable' error loop catches it on next attempt.
-      });
-      
-      call.on('error', (err) => {
-          console.error("Call specific error", err);
-          activeCallRef.current = null;
-      });
-  };
+  }, [gameId, playerColor, gameActive, localStream, retryPeerTrigger]);
 
   return (
     <div className="w-full h-full bg-black rounded-lg border-2 border-gray-700 aspect-video relative overflow-hidden shadow-lg group">
@@ -184,13 +222,17 @@ const VideoFeed: React.FC<VideoFeedProps> = ({ gameId, playerColor, gameActive }
                 className="w-full h-full object-cover"
              />
         ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center text-gray-500">
+            <div className="w-full h-full flex flex-col items-center justify-center text-gray-500 p-4 text-center">
                  {error ? (
-                     <span className="text-red-400 text-sm px-2 text-center">{error}</span>
+                     <div className="text-red-400 text-sm">
+                        <p className="font-bold mb-1">Video Error</p>
+                        {error}
+                     </div>
                  ) : (
                     <>
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500 mb-2"></div>
                         <span className="text-xs animate-pulse">{status}</span>
+                        {playerColor === 'white' && <span className="text-[10px] text-gray-600 mt-2">(You are the host/caller)</span>}
                     </>
                  )}
             </div>
@@ -209,12 +251,13 @@ const VideoFeed: React.FC<VideoFeedProps> = ({ gameId, playerColor, gameActive }
                 />
             ) : (
                 <div className="w-full h-full flex items-center justify-center bg-gray-900">
+                     {/* Placeholder icon */}
                     <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
                 </div>
             )}
         </div>
         
-        <div className="absolute top-2 left-2 bg-black/50 px-2 py-1 rounded text-[10px] text-gray-300 font-mono opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="absolute top-2 left-2 bg-black/50 px-2 py-1 rounded text-[10px] text-gray-300 font-mono opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
             {gameId ? `${gameId} (${playerColor})` : 'No Game'}
         </div>
     </div>
