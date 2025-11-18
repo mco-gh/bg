@@ -6,16 +6,18 @@ import { Player } from '../types';
 
 interface DiceTrayProps {
   dice: [number, number] | null;
+  movesLeft: number[];
   turn: Player | null;
   playerColor: Player | null;
   onRollDice: () => void;
   onEndTurn: () => void;
 }
 
-const DiceTray: React.FC<DiceTrayProps> = ({ dice, turn, playerColor, onRollDice, onEndTurn }) => {
+const DiceTray: React.FC<DiceTrayProps> = ({ dice, movesLeft, turn, playerColor, onRollDice, onEndTurn }) => {
   const [isRolling, setIsRolling] = useState(false);
   const isMyTurn = turn === playerColor;
   const canRoll = isMyTurn && !dice;
+  const hasMovesRemaining = movesLeft.length > 0;
 
   useEffect(() => {
     if (dice) {
@@ -63,7 +65,12 @@ const DiceTray: React.FC<DiceTrayProps> = ({ dice, turn, playerColor, onRollDice
         ) : isMyTurn && dice ? (
           <button
             onClick={onEndTurn}
-            className="flex items-center justify-center w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg text-lg transition-all transform hover:scale-105"
+            disabled={hasMovesRemaining}
+            className={`flex items-center justify-center w-full font-bold py-3 px-6 rounded-lg text-lg transition-all transform ${
+              hasMovesRemaining 
+                ? 'bg-gray-700 text-gray-500 cursor-not-allowed' 
+                : 'bg-green-500 hover:bg-green-600 text-white hover:scale-105'
+            }`}
             aria-label="End your turn"
           >
             <EndTurnIcon className="w-6 h-6 mr-2" />

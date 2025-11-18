@@ -47,6 +47,7 @@ const GamePage: React.FC<GamePageProps> = ({
         <div className="flex-1 md:flex-none w-full">
           <DiceTray
             dice={dice}
+            movesLeft={movesLeft}
             turn={turn}
             playerColor={playerColor}
             onRollDice={onRollDice}
