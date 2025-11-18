@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { io, Socket } from 'socket.io-client';
+import type { Socket } from 'socket.io-client';
+import { io } from 'socket.io-client';
 import Header from './components/Header';
 import GamePage from './components/GamePage';
 import Modal from './components/Modal';
@@ -105,10 +106,6 @@ function App() {
     };
   }, [backendUrl]);
 
-  const handleGoHome = () => {
-    window.location.reload();
-  };
-
   const handleConnect = () => {
     if (socket && connectGameId.trim()) {
       joiningGameIdRef.current = connectGameId.trim();
@@ -165,7 +162,6 @@ function App() {
         onShowAbout={() => setShowAboutModal(true)}
         onShowConfig={() => setShowConfigModal(true)}
         onShowConnect={() => setShowConnectModal(true)}
-        onLogoClick={handleGoHome}
       />
       <main className="flex-grow flex flex-col items-center pt-8 px-4 pb-4 gap-8">
         <div className="w-full max-w-5xl text-center p-3 bg-gray-900 rounded-md shadow-lg">
