@@ -1,6 +1,6 @@
 # Online Backgammon
 
-BG is a web application that allows two people to play backgammon together online using a realistic, interactive playing surface.
+This project is a web application that allows two people to play backgammon together online using a realistic, interactive playing surface.
 
 As of the current version, the application provides a fully rendered, interactive backgammon board with the standard initial checker setup. Players can click and drag pieces to move them between points, with basic rule enforcement preventing illegal moves to blocked points.
 
