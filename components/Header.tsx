@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { CopyIcon } from './icons/CopyIcon';
 
@@ -22,15 +23,14 @@ const Header: React.FC<HeaderProps> = ({ gameId, onShowAbout, onShowConfig, onSh
   return (
     <header className="w-full bg-gray-900 shadow-lg p-3">
       <div className="container mx-auto flex items-center">
-        {/* Left: Logo and Title */}
+        {/* Left: Title (Logo moved to main body) */}
         <div className="flex-1 flex items-center justify-start min-w-0">
           <a 
-            href="https://macgammon.app"
+            href="/"
             className="flex items-center cursor-pointer"
             aria-label="Go to homepage"
           >
-            <img src="https://mco.dev/img/macgammon.png" alt="MacGammon" className="h-10 w-auto object-contain" />
-            <span className="ml-3 text-2xl font-bold font-sans text-white tracking-wide hover:text-cyan-400 transition-colors whitespace-nowrap hidden sm:block">MACgammon.app</span>
+            <span className="text-2xl font-bold font-sans text-white tracking-wide hover:text-cyan-400 transition-colors whitespace-nowrap hidden sm:block">mcoBG</span>
           </a>
         </div>
 

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import type { Socket } from 'socket.io-client';
 import { io } from 'socket.io-client';
@@ -163,11 +164,38 @@ function App() {
         onShowConfig={() => setShowConfigModal(true)}
         onShowConnect={() => setShowConnectModal(true)}
       />
-      <main className="flex-grow flex flex-col items-center pt-8 px-4 pb-4 gap-8">
-        <div className="w-full max-w-5xl text-center p-3 bg-gray-900 rounded-md shadow-lg">
-            <p className="text-lg text-cyan-300 font-semibold">{getStatusMessage()}</p>
-            {playerColor && gameStatus !== 'waiting' && <p className="text-sm text-gray-400">You are playing as {playerColor}.</p>}
+      <main className="flex-grow flex flex-col items-center pt-6 px-4 pb-4 gap-6">
+        {/* Header Row: Logo and Status Column */}
+        <div className="w-full max-w-5xl flex flex-row items-stretch gap-6">
+            {/* Large Logo - Reduced size to h-36 (was h-40) */}
+            <img 
+                src="https://mco.dev/img/mcobg.jpg" 
+                alt="mcoBG Logo" 
+                className="h-36 w-auto object-contain rounded-xl shadow-xl flex-shrink-0"
+            />
+
+            {/* Right Column: About Text and Status Bar */}
+            {/* Reduced gap to gap-2 to fit tighter height */}
+            <div className="flex-grow flex flex-col gap-2">
+                
+                {/* Short About Text - Reduced padding to p-3 */}
+                <div className="flex-grow bg-gray-800/50 rounded-md border border-gray-700 p-3 text-center shadow-sm flex flex-col justify-center">
+                     <p className="text-gray-200 text-lg font-bold leading-relaxed">
+                        Experience realistic online backgammon. Share your Game ID to play with a friend!
+                     </p>
+                </div>
+
+                {/* Status Bar - Reduced min-height to 3rem */}
+                <div className="text-center p-2 bg-gray-900 rounded-md shadow-lg flex flex-col justify-center items-center min-h-[3rem]">
+                    <p className="text-lg text-cyan-300 font-semibold">{getStatusMessage()}</p>
+                    {playerColor && gameStatus !== 'waiting' && <p className="text-xs text-gray-400 mt-1">You are playing as {playerColor}.</p>}
+                </div>
+            </div>
         </div>
+
+        {/* Horizontal Divider */}
+        <div className="w-full max-w-5xl border-t border-gray-600 opacity-50"></div>
+
         <GamePage
           gameId={gameId}
           boardState={boardState}
@@ -185,10 +213,10 @@ function App() {
       <Modal 
         isOpen={showAboutModal} 
         onClose={() => setShowAboutModal(false)}
-        title="About MACgammon"
+        title="About mcoBG"
       >
         <p className="text-gray-300">
-          MACgammon allows two players to enjoy a game of backgammon online. 
+          mcoBG allows two players to enjoy a game of backgammon online. 
           The interface is designed to be intuitive and realistic, providing a great virtual tabletop experience.
         </p>
         <p className="mt-4 text-gray-300">
