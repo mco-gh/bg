@@ -167,28 +167,28 @@ function App() {
       <main className="flex-grow flex flex-col items-center pt-6 px-4 pb-4 gap-6">
         {/* Header Row: Logo and Status Column */}
         <div className="w-full max-w-5xl flex flex-row items-stretch gap-6">
-            {/* Large Logo - Reduced size to h-36 (was h-40) */}
+            {/* Large Logo - Reduced size to h-32 (was h-36) */}
             <img 
                 src="https://mco.dev/img/mcobg.jpg" 
                 alt="mcoBG Logo" 
-                className="h-36 w-auto object-contain rounded-xl shadow-xl flex-shrink-0"
+                className="h-32 w-auto object-contain rounded-xl shadow-xl flex-shrink-0"
             />
 
             {/* Right Column: About Text and Status Bar */}
             {/* Reduced gap to gap-2 to fit tighter height */}
             <div className="flex-grow flex flex-col gap-2">
                 
-                {/* Short About Text - Reduced padding to p-3 */}
-                <div className="flex-grow bg-gray-800/50 rounded-md border border-gray-700 p-3 text-center shadow-sm flex flex-col justify-center">
-                     <p className="text-gray-200 text-lg font-bold leading-relaxed">
+                {/* Short About Text - Reduced padding to p-2, font to text-base */}
+                <div className="flex-grow bg-gray-800/50 rounded-md border border-gray-700 p-2 text-center shadow-sm flex flex-col justify-center">
+                     <p className="text-gray-200 text-base font-bold leading-relaxed">
                         Experience realistic online backgammon. Share your Game ID to play with a friend!
                      </p>
                 </div>
 
-                {/* Status Bar - Reduced min-height to 3rem */}
-                <div className="text-center p-2 bg-gray-900 rounded-md shadow-lg flex flex-col justify-center items-center min-h-[3rem]">
-                    <p className="text-lg text-cyan-300 font-semibold">{getStatusMessage()}</p>
-                    {playerColor && gameStatus !== 'waiting' && <p className="text-xs text-gray-400 mt-1">You are playing as {playerColor}.</p>}
+                {/* Status Bar - Reduced min-height to 2.5rem */}
+                <div className="text-center p-1 bg-gray-900 rounded-md shadow-lg flex flex-col justify-center items-center min-h-[2.5rem]">
+                    <p className="text-base text-cyan-300 font-semibold">{getStatusMessage()}</p>
+                    {playerColor && gameStatus !== 'waiting' && <p className="text-xs text-gray-400 mt-0.5">You are playing as {playerColor}.</p>}
                 </div>
             </div>
         </div>
