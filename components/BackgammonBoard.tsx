@@ -20,6 +20,14 @@ interface BackgammonBoardProps {
 const BackgammonBoard: React.FC<BackgammonBoardProps> = ({ boardState, turn, playerColor, movesLeft, onMovePiece }) => {
   const [draggedItem, setDraggedItem] = useState<DraggedItem | null>(null);
 
+  // Calculate borne off checkers (Standard game has 15 checkers per player)
+  const TOTAL_CHECKERS = 15;
+  const whiteOnBoard = boardState.reduce((total, point) => point.player === 'white' ? total + point.checkers : total, 0);
+  const blackOnBoard = boardState.reduce((total, point) => point.player === 'black' ? total + point.checkers : total, 0);
+  
+  const whiteBorneOff = Math.max(0, TOTAL_CHECKERS - whiteOnBoard);
+  const blackBorneOff = Math.max(0, TOTAL_CHECKERS - blackOnBoard);
+
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>, fromPointIndex: number, player: Player, totalCheckersAtSource: number) => {
     e.dataTransfer.setData('application/json', JSON.stringify({ fromPointIndex, player }));
     
@@ -84,78 +92,108 @@ const BackgammonBoard: React.FC<BackgammonBoardProps> = ({ boardState, turn, pla
   };
 
   return (
-    <div 
-      className="relative w-full max-w-4xl bg-gray-900 shadow-2xl rounded-lg overflow-hidden" 
-      style={{ aspectRatio: '1200 / 1000' }}
-    >
-      <img
-        src="https://mco.dev/img/backgammon.jpg"
-        alt="Backgammon board"
-        className="absolute top-0 left-0 w-full h-full object-fill"
-      />
-      
-      <div className="absolute top-0 left-0 w-full h-full">
-        {POINT_POSITIONS.map((pos, index) => {
-          const pointWidth = 6.8;
-          const style: React.CSSProperties = {
-            position: 'absolute',
-            width: `${pointWidth}%`,
-            height: '50%',
-            left: `calc(${pos.left} - ${pointWidth / 2}%)`,
-          };
-          if (pos.top) {
-            style.top = '0';
-          } else {
-            style.bottom = '0';
-          }
-          return (
-            <div
-              key={`dropzone-${index}`}
-              style={style}
-              onDragOver={handleDragOver}
-              onDrop={(e) => handleDrop(e, index)}
-              className="z-10"
-            />
-          );
-        })}
-      </div>
-
-      <div className="absolute top-0 left-0 w-full h-full">
-        {boardState.flatMap((point, pointIndex) => {
-          const isDragSource = !!(draggedItem && draggedItem.fromPointIndex === pointIndex);
-          
-          const checkersToRender = isDragSource ? draggedItem!.totalCheckersAtSource : point.checkers;
-          const playerToRender = isDragSource ? draggedItem!.player : point.player;
-
-          if (checkersToRender === 0 || !playerToRender) {
-            return [];
-          }
-
-          return Array.from({ length: checkersToRender }).map((_, stackIndex) => {
-            const isBeingDragged = isDragSource && stackIndex === checkersToRender - 1;
-            
-            const checkerStyle = getCheckerStyle(pointIndex, stackIndex, checkersToRender);
-            if (isBeingDragged) {
-              checkerStyle.opacity = 0;
+    <div className="flex gap-4 w-full max-w-5xl mx-auto">
+      {/* Main Board Area */}
+      <div 
+        className="relative flex-grow bg-gray-900 shadow-2xl rounded-lg overflow-hidden" 
+        style={{ aspectRatio: '1200 / 1000' }}
+      >
+        <img
+          src="https://mco.dev/img/backgammon.jpg"
+          alt="Backgammon board"
+          className="absolute top-0 left-0 w-full h-full object-fill"
+        />
+        
+        <div className="absolute top-0 left-0 w-full h-full">
+          {POINT_POSITIONS.map((pos, index) => {
+            const pointWidth = 6.8;
+            const style: React.CSSProperties = {
+              position: 'absolute',
+              width: `${pointWidth}%`,
+              height: '50%',
+              left: `calc(${pos.left} - ${pointWidth / 2}%)`,
+            };
+            if (pos.top) {
+              style.top = '0';
+            } else {
+              style.bottom = '0';
             }
-
-            const isMyTurn = turn === playerColor;
-            const isMyChecker = point.player === playerColor;
-            const isTopCheckerOnBoard = point.player !== null && stackIndex === point.checkers - 1;
-            const isDraggable = isMyTurn && movesLeft.length > 0 && isMyChecker && isTopCheckerOnBoard;
-
             return (
-              <Checker
-                key={`checker-${pointIndex}-${stackIndex}`}
-                player={playerToRender}
-                style={checkerStyle}
-                isDraggable={isDraggable}
-                onDragStart={isDraggable ? (e) => handleDragStart(e, pointIndex, point.player!, point.checkers) : undefined}
-                onDragEnd={isDraggable ? handleDragEnd : undefined}
+              <div
+                key={`dropzone-${index}`}
+                style={style}
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, index)}
+                className="z-10"
               />
             );
-          });
-        })}
+          })}
+        </div>
+
+        <div className="absolute top-0 left-0 w-full h-full">
+          {boardState.flatMap((point, pointIndex) => {
+            const isDragSource = !!(draggedItem && draggedItem.fromPointIndex === pointIndex);
+            
+            const checkersToRender = isDragSource ? draggedItem!.totalCheckersAtSource : point.checkers;
+            const playerToRender = isDragSource ? draggedItem!.player : point.player;
+
+            if (checkersToRender === 0 || !playerToRender) {
+              return [];
+            }
+
+            return Array.from({ length: checkersToRender }).map((_, stackIndex) => {
+              const isBeingDragged = isDragSource && stackIndex === checkersToRender - 1;
+              
+              const checkerStyle = getCheckerStyle(pointIndex, stackIndex, checkersToRender);
+              if (isBeingDragged) {
+                checkerStyle.opacity = 0;
+              }
+
+              const isMyTurn = turn === playerColor;
+              const isMyChecker = point.player === playerColor;
+              const isTopCheckerOnBoard = point.player !== null && stackIndex === point.checkers - 1;
+              const isDraggable = isMyTurn && movesLeft.length > 0 && isMyChecker && isTopCheckerOnBoard;
+
+              return (
+                <Checker
+                  key={`checker-${pointIndex}-${stackIndex}`}
+                  player={playerToRender}
+                  style={checkerStyle}
+                  isDraggable={isDraggable}
+                  onDragStart={isDraggable ? (e) => handleDragStart(e, pointIndex, point.player!, point.checkers) : undefined}
+                  onDragEnd={isDraggable ? handleDragEnd : undefined}
+                />
+              );
+            });
+          })}
+        </div>
+      </div>
+
+      {/* Bear Off Tray */}
+      <div className="w-16 md:w-20 lg:w-24 flex-shrink-0 flex flex-col justify-between bg-stone-800 rounded-lg border-4 border-stone-900 p-2 shadow-xl">
+        {/* Top Slot (Black's Home / Bear Off) */}
+        <div className="flex-1 bg-black/30 rounded mb-2 relative border-2 border-stone-950/50 p-1 flex flex-col-reverse items-center overflow-hidden shadow-inner">
+             {Array.from({ length: blackBorneOff }).map((_, i) => (
+                <div 
+                    key={`black-off-${i}`}
+                    className="w-[90%] aspect-square rounded-full bg-stone-900 border-2 border-stone-950 shadow-md -mb-[70%] z-0"
+                >
+                   <div className="w-full h-full rounded-full opacity-20 bg-gradient-to-br from-white to-transparent" />
+                </div>
+            ))}
+        </div>
+
+        {/* Bottom Slot (White's Home / Bear Off) */}
+        <div className="flex-1 bg-stone-700/30 rounded mt-2 relative border-2 border-stone-950/50 p-1 flex flex-col-reverse items-center overflow-hidden shadow-inner">
+             {Array.from({ length: whiteBorneOff }).map((_, i) => (
+                <div 
+                    key={`white-off-${i}`}
+                    className="w-[90%] aspect-square rounded-full bg-stone-200 border-2 border-stone-400 shadow-md -mb-[70%] z-0"
+                >
+                    <div className="w-full h-full rounded-full opacity-30 bg-gradient-to-br from-white to-transparent" />
+                </div>
+            ))}
+        </div>
       </div>
     </div>
   );
