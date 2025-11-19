@@ -180,15 +180,15 @@ function App() {
                 
                 {/* Short About Text - Reduced padding to p-2, font to text-2xl */}
                 <div className="flex-grow bg-gray-800/50 rounded-md border border-gray-700 p-2 text-center shadow-sm flex flex-col justify-center">
-                     <p className="text-gray-200 text-2xl font-bold leading-relaxed">
+                     <p className="text-gray-200 text-xs sm:text-2xl font-bold leading-relaxed">
                         Share your Game ID to play backgammon with a friend!
                      </p>
                 </div>
 
                 {/* Status Bar - Reduced min-height to 2.5rem */}
                 <div className="text-center p-1 bg-gray-900 rounded-md shadow-lg flex flex-col justify-center items-center min-h-[2.5rem]">
-                    <p className="text-[19px] text-cyan-300 font-semibold">{getStatusMessage()}</p>
-                    {playerColor && gameStatus !== 'waiting' && <p className="text-xs text-gray-400 mt-0.5">You are playing as {playerColor}.</p>}
+                    <p className="text-[10px] sm:text-[19px] text-cyan-300 font-semibold">{getStatusMessage()}</p>
+                    {playerColor && gameStatus !== 'waiting' && <p className="text-[8px] sm:text-xs text-gray-400 mt-0.5">You are playing as {playerColor}.</p>}
                 </div>
             </div>
         </div>

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { CopyIcon } from './icons/CopyIcon';
 
@@ -49,22 +48,22 @@ const Header: React.FC<HeaderProps> = ({ gameId, onShowAbout, onShowConfig, onSh
 
         {/* Right: Navigation Buttons */}
         <div className="flex items-center justify-end">
-          <nav className="flex items-center space-x-2 sm:space-x-3">
+          <nav className="flex items-center space-x-0.5 sm:space-x-3">
             <button 
               onClick={onShowConnect} 
-              className="px-2.5 py-2 text-[17px] font-medium text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors"
+              className="px-1 sm:px-2.5 py-2 text-[17px] font-medium text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors"
             >
                Connect
             </button>
             <button 
               onClick={onShowConfig} 
-              className="px-2.5 py-2 text-[17px] font-medium text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors"
+              className="px-1 sm:px-2.5 py-2 text-[17px] font-medium text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors"
             >
               Config
             </button>
             <button 
               onClick={onShowAbout} 
-              className="px-2.5 py-2 text-[17px] font-medium text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors"
+              className="px-1 sm:px-2.5 py-2 text-[17px] font-medium text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors"
             >
               About
             </button>
