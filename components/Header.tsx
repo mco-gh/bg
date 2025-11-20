@@ -65,7 +65,7 @@ const Header: React.FC<HeaderProps> = ({ gameId, onShowAbout, onShowConfig, onSh
               onClick={onShowAbout} 
               className="px-1 sm:px-2.5 py-2 text-[17px] font-medium text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors"
             >
-              This App
+              About
             </button>
           </nav>
         </div>
