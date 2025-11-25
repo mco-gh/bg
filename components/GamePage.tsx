@@ -1,8 +1,9 @@
+
 import React from 'react';
 import BackgammonBoard from './BackgammonBoard';
 import DiceTray from './DiceTray';
 import VideoFeed from './VideoFeed';
-import { PointState, Player } from '../types';
+import { PointState, Player, MoveDirection } from '../types';
 
 interface GamePageProps {
   gameId: string;
@@ -11,6 +12,7 @@ interface GamePageProps {
   movesLeft: number[];
   turn: Player | null;
   playerColor: Player | null;
+  moveDirection: MoveDirection;
   onRollDice: () => void;
   onMovePiece: (from: number, to: number) => void;
   onEndTurn: () => void;
@@ -24,6 +26,7 @@ const GamePage: React.FC<GamePageProps> = ({
   movesLeft,
   turn,
   playerColor,
+  moveDirection,
   onRollDice,
   onMovePiece,
   onEndTurn,
@@ -36,6 +39,7 @@ const GamePage: React.FC<GamePageProps> = ({
           boardState={boardState}
           turn={turn}
           playerColor={playerColor}
+          moveDirection={moveDirection}
           onMovePiece={onMovePiece}
           movesLeft={movesLeft}
         />

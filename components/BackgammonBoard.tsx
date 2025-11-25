@@ -1,7 +1,8 @@
+
 import React, { useState } from 'react';
 import Checker from './Checker';
 import { getCheckerStyle, POINT_POSITIONS } from '../constants';
-import { PointState, Player } from '../types';
+import { PointState, Player, MoveDirection } from '../types';
 
 type DraggedItem = {
   fromPointIndex: number;
@@ -14,10 +15,11 @@ interface BackgammonBoardProps {
   turn: Player | null;
   playerColor: Player | null;
   movesLeft: number[];
+  moveDirection: MoveDirection;
   onMovePiece: (fromPointIndex: number, toPointIndex: number) => void;
 }
 
-const BackgammonBoard: React.FC<BackgammonBoardProps> = ({ boardState, turn, playerColor, movesLeft, onMovePiece }) => {
+const BackgammonBoard: React.FC<BackgammonBoardProps> = ({ boardState, turn, playerColor, movesLeft, moveDirection, onMovePiece }) => {
   const [draggedItem, setDraggedItem] = useState<DraggedItem | null>(null);
 
   // Calculate borne off checkers (Standard game has 15 checkers per player)
@@ -60,15 +62,17 @@ const BackgammonBoard: React.FC<BackgammonBoardProps> = ({ boardState, turn, pla
       return; // Silently fail as the piece should not have been draggable.
     }
 
+    const directionName = moveDirection === 'clockwise' ? 'clockwise' : 'counter-clockwise';
+
     // 2. Check for correct move direction
     // White moves from lower point numbers to higher point numbers (1 -> 24)
     if (playerColor === 'white' && toPointIndex < fromPointIndex) {
-      alert('Invalid Move: White checkers must move towards higher point numbers.');
+      alert(`Invalid Move: White checkers must move ${directionName} (towards higher point numbers).`);
       return;
     }
     // Black moves from higher point numbers to lower point numbers (24 -> 1)
     if (playerColor === 'black' && toPointIndex > fromPointIndex) {
-      alert('Invalid Move: Black checkers must move towards lower point numbers.');
+      alert(`Invalid Move: Black checkers must move ${directionName} (towards lower point numbers).`);
       return;
     }
 
@@ -91,12 +95,17 @@ const BackgammonBoard: React.FC<BackgammonBoardProps> = ({ boardState, turn, pla
     onMovePiece(fromPointIndex, toPointIndex);
   };
 
+  const isClockwise = moveDirection === 'clockwise';
+
   return (
-    <div className="flex gap-4 w-full max-w-5xl mx-auto">
+    <div className={`flex gap-4 w-full max-w-5xl mx-auto ${isClockwise ? 'flex-row-reverse' : ''}`}>
       {/* Main Board Area */}
       <div 
         className="relative flex-grow bg-gray-900 shadow-2xl rounded-lg overflow-hidden" 
-        style={{ aspectRatio: '1200 / 1000' }}
+        style={{ 
+          aspectRatio: '1200 / 1000',
+          transform: isClockwise ? 'scaleX(-1)' : undefined
+        }}
       >
         <img
           src="https://mco.dev/img/backgammon.jpg"

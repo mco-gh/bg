@@ -5,8 +5,10 @@ import { io } from 'socket.io-client';
 import Header from './components/Header';
 import GamePage from './components/GamePage';
 import Modal from './components/Modal';
-import { PointState, Player } from './types';
+import { PointState, Player, MoveDirection } from './types';
 import { INITIAL_BOARD_STATE } from './constants';
+import { ClockwiseIcon } from './components/icons/ClockwiseIcon';
+import { CounterClockwiseIcon } from './components/icons/CounterClockwiseIcon';
 
 function App() {
   // Modal states
@@ -16,6 +18,7 @@ function App() {
 
   // Config state
   const [backendUrl, setBackendUrl] = useState('https://backend-server-mcodev.replit.app');
+  const [moveDirection, setMoveDirection] = useState<MoveDirection>('counter-clockwise');
 
   // Game state from server
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -203,6 +206,7 @@ function App() {
           movesLeft={movesLeft}
           turn={turn}
           playerColor={playerColor}
+          moveDirection={moveDirection}
           onRollDice={handleRollDice}
           onMovePiece={handleMovePiece}
           onEndTurn={handleEndTurn}
@@ -229,7 +233,7 @@ function App() {
         onClose={() => setShowConfigModal(false)}
         title="Configuration"
       >
-        <div className="space-y-4">
+        <div className="space-y-6">
           <div>
             <label htmlFor="backendUrlInput" className="block text-left text-gray-300 font-medium mb-2">
               Backend Service URL
@@ -244,6 +248,31 @@ function App() {
             />
             <p className="text-gray-400 mt-2 text-sm">
               This URL is used to connect to the game server for multiplayer functionality.
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-left text-gray-300 font-medium mb-2">
+              Movement Direction
+            </label>
+            <div className="flex bg-gray-700 rounded-lg p-1">
+                <button
+                    onClick={() => setMoveDirection('clockwise')}
+                    className={`flex-1 flex items-center justify-center py-2 rounded-md transition-colors ${moveDirection === 'clockwise' ? 'bg-cyan-600 text-white' : 'text-gray-400 hover:text-white'}`}
+                >
+                    <ClockwiseIcon className="w-5 h-5 mr-2" />
+                    Clockwise
+                </button>
+                <button
+                    onClick={() => setMoveDirection('counter-clockwise')}
+                    className={`flex-1 flex items-center justify-center py-2 rounded-md transition-colors ${moveDirection === 'counter-clockwise' ? 'bg-cyan-600 text-white' : 'text-gray-400 hover:text-white'}`}
+                >
+                    <CounterClockwiseIcon className="w-5 h-5 mr-2" />
+                    Counter-clockwise
+                </button>
+            </div>
+            <p className="text-gray-400 mt-2 text-sm">
+                Choose your preferred direction of movement.
             </p>
           </div>
         </div>

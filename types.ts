@@ -8,6 +8,7 @@ export enum GameState {
 }
 
 export type Player = 'white' | 'black';
+export type MoveDirection = 'clockwise' | 'counter-clockwise';
 
 export interface PointState {
   checkers: number;
