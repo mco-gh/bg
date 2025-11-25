@@ -96,9 +96,13 @@ const BackgammonBoard: React.FC<BackgammonBoardProps> = ({ boardState, turn, pla
   };
 
   const isClockwise = moveDirection === 'clockwise';
+  const isRotated = playerColor === 'black';
 
   return (
-    <div className={`flex gap-4 w-full max-w-5xl mx-auto ${isClockwise ? 'flex-row-reverse' : ''}`}>
+    <div 
+      className={`flex gap-4 w-full max-w-5xl mx-auto ${isClockwise ? 'flex-row-reverse' : ''}`}
+      style={{ transform: isRotated ? 'rotate(180deg)' : undefined }}
+    >
       {/* Main Board Area */}
       <div 
         className="relative flex-grow bg-gray-900 shadow-2xl rounded-lg overflow-hidden" 
@@ -158,6 +162,11 @@ const BackgammonBoard: React.FC<BackgammonBoardProps> = ({ boardState, turn, pla
                 checkerStyle.opacity = 0;
               }
 
+              // Counter-rotate the checker if the board is rotated, so shadows/gradients stay consistent
+              if (isRotated) {
+                checkerStyle.transform = 'rotate(180deg)';
+              }
+
               const isMyTurn = turn === playerColor;
               const isMyChecker = point.player === playerColor;
               const isTopCheckerOnBoard = point.player !== null && stackIndex === point.checkers - 1;
@@ -186,6 +195,7 @@ const BackgammonBoard: React.FC<BackgammonBoardProps> = ({ boardState, turn, pla
                 <div 
                     key={`black-off-${i}`}
                     className="w-[90%] aspect-square rounded-full bg-stone-900 border-2 border-stone-950 shadow-md -mb-[70%] z-0"
+                    style={{ transform: isRotated ? 'rotate(180deg)' : undefined }}
                 >
                    <div className="w-full h-full rounded-full opacity-20 bg-gradient-to-br from-white to-transparent" />
                 </div>
@@ -198,6 +208,7 @@ const BackgammonBoard: React.FC<BackgammonBoardProps> = ({ boardState, turn, pla
                 <div 
                     key={`white-off-${i}`}
                     className="w-[90%] aspect-square rounded-full bg-stone-200 border-2 border-stone-400 shadow-md -mb-[70%] z-0"
+                    style={{ transform: isRotated ? 'rotate(180deg)' : undefined }}
                 >
                     <div className="w-full h-full rounded-full opacity-30 bg-gradient-to-br from-white to-transparent" />
                 </div>
