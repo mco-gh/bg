@@ -19,3 +19,12 @@ The app is an installable web app: `manifest.webmanifest` describes it, and `sw.
 is a network-first service worker, so it is always current when online and still
 opens offline. Nothing needs bumping on release. The icons in `icons/` are rendered
 from the SVG sources by `bash build/icons/render.sh` (needs Google Chrome).
+
+## Connecting through firewalls
+
+Two browsers usually connect directly, with help from a public STUN server. When they
+can't (mobile data, strict routers, browsers that block local connections), a TURN
+relay carries the traffic. `ice.js` fetches short-lived relay credentials from
+`/api/turn`, a Netlify Function in the mco.dev repo that asks Cloudflare for them;
+if that isn't available it falls back to STUN only. If no route forms within 20
+seconds, the app says so instead of waiting forever.
