@@ -483,3 +483,8 @@ dialog.sheet[open] { display: grid; gap: .9rem; }
   opacity: 1;
   @starting-style { opacity: 0; }
 }
+
+/* Copyright notice at the foot of the page. */
+.copyright { margin: 0; padding: 1.5rem 1rem calc(1.5rem + env(safe-area-inset-bottom, 0px)); text-align: center; font-size: 0.8rem; color: var(--ink-soft); }
+/* Only on the start screen: during a game or call the main view fills the window. */
+body:has(#lobby[hidden]) .copyright { display: none; }
