@@ -33,7 +33,7 @@ function anyBehind(board, side, pos) {
 }
 
 /** Every move one die allows, ignoring the "use as many dice as you can" rule. */
-function movesForDie(board, side, die) {
+export function movesForDie(board, side, die) {
   const out = [];
   const home = allHome(board, side);
   const consider = (from, pos) => {

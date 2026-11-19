@@ -45,7 +45,7 @@
   <main id="lobby" class="lobby">
     <section class="pitch">
       <h1>Backgammon with a friend, <em>anywhere</em>.</h1>
-      <p class="sub">No sign-up, no downloads. Start a game, share the code and roll.</p>
+      <p class="sub">No sign-up, no downloads. Start a game, share the code and roll, or practise against the computer.</p>
       <div class="preview-wrap"><div id="preview" aria-hidden="true"></div></div>
     </section>
 
@@ -53,13 +53,14 @@
       <h2 id="card-title" class="visually-hidden">Play</h2>
 
       <div id="setup">
+        <fieldset class="pick">
+          <legend>Pick your color</legend>
+          <label class="pick-chip"><input type="radio" name="side" value="0" checked><span class="chip-face a" aria-hidden="true"></span><span class="visually-hidden">First color</span></label>
+          <label class="pick-chip"><input type="radio" name="side" value="1"><span class="chip-face b" aria-hidden="true"></span><span class="visually-hidden">Second color</span></label>
+          <button class="link-btn" type="button" command="show-modal" commandfor="settings">Change colors</button>
+        </fieldset>
+
         <form id="start-form" class="stack">
-          <fieldset class="pick">
-            <legend>Pick your color</legend>
-            <label class="pick-chip"><input type="radio" name="side" value="0" checked><span class="chip-face a" aria-hidden="true"></span><span class="visually-hidden">First color</span></label>
-            <label class="pick-chip"><input type="radio" name="side" value="1"><span class="chip-face b" aria-hidden="true"></span><span class="visually-hidden">Second color</span></label>
-            <button class="link-btn" type="button" command="show-modal" commandfor="settings">Change colors</button>
-          </fieldset>
           <button class="btn primary big" type="submit">
             <span aria-hidden="true">🎲</span> Start a game
           </button>
@@ -71,6 +72,19 @@
           <label class="visually-hidden" for="join-code">Game code</label>
           <input id="join-code" name="code" type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="60" placeholder="abc-def" required>
           <button class="btn" type="submit">Join</button>
+        </form>
+
+        <p class="or"><span>or play the computer</span></p>
+
+        <form id="cpu-form" class="stack">
+          <fieldset class="levels">
+            <legend>Opponent strength</legend>
+            <div class="level-list" id="level-list"></div>
+            <p class="level-blurb" id="level-blurb" aria-live="polite"></p>
+          </fieldset>
+          <button class="btn big cpu-btn" type="submit">
+            <span aria-hidden="true">🤖</span> Play the computer
+          </button>
         </form>
       </div>
 
@@ -132,6 +146,8 @@
     </section>
 
     <aside class="side" aria-label="Video and chat">
+      <p class="solo-note" id="solo-note" hidden></p>
+      <div class="social" id="social">
       <div class="videos" id="videos" data-them="off" data-me="off">
         <div class="tile them">
           <video id="video-them" autoplay playsinline></video>
@@ -159,6 +175,7 @@
           <input id="chat-input" type="text" maxlength="500" autocomplete="off" placeholder="Type a message" enterkeyhint="send">
           <button class="btn small primary" type="submit">Send</button>
         </form>
+      </div>
       </div>
 
       <button class="btn small ghost danger-text" type="button" command="show-modal" commandfor="leave">Leave game</button>
@@ -209,7 +226,7 @@
   <!-- ───────────── Info ───────────── -->
   <dialog id="info" class="sheet wide" aria-labelledby="info-title" closedby="any">
     <h2 id="info-title">About BG</h2>
-    <p>BG is backgammon for two people, wherever they are. There are no accounts, no ads and no saved games: just a board, two dice and a friend.</p>
+    <p>BG is backgammon for two people, wherever they are. There are no accounts, no ads and no saved games: just a board, two dice and a friend. No friend handy? Play the computer.</p>
 
     <h3>Starting a game</h3>
     <ol>
@@ -217,6 +234,9 @@
       <li>Send the code (or the link) to your friend.</li>
       <li>When they join, the opening roll decides who goes first.</li>
     </ol>
+
+    <h3>Playing the computer</h3>
+    <p>Pick a strength from <strong>Beginner</strong> to <strong>Expert</strong> and choose <strong>Play the computer</strong>. The weaker levels make deliberate mistakes; Expert looks a roll ahead at your best reply. The computer runs in your browser, so this works offline too.</p>
 
     <h3>Playing</h3>
     <ul>
@@ -241,7 +261,7 @@
   <!-- ───────────── Leave ───────────── -->
   <dialog id="leave" class="sheet" aria-labelledby="leave-title">
     <h2 id="leave-title">Leave this game?</h2>
-    <p>The game ends for both of you and can’t be resumed.</p>
+    <p id="leave-text">The game ends for both of you and can’t be resumed.</p>
     <div class="sheet-actions">
       <button class="btn ghost" type="button" data-close autofocus>Keep playing</button>
       <button class="btn danger" type="button" id="leave-yes">Leave</button>

@@ -3,6 +3,7 @@
 import * as BG from './game.js';
 import { Board } from './board.js';
 import { openLink, newCode, cleanCode } from './net.js';
+import { LEVELS, chooseMoves } from './ai.js';
 
 const $ = (id) => document.getElementById(id);
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -86,6 +87,8 @@ let rolling = false;      // dice are tumbling
 let moving = false;       // a multi-dice move is being played out
 let peerHere = false;
 let celebrated = false;
+let solo = null;          // the computer's level when playing it, else null
+let thinking = false;     // the computer is taking its turn
 
 const board = new Board($('board'), onPick);
 const preview = new Board($('preview'));
@@ -206,6 +209,8 @@ function toLobby(error = '') {
   link?.close();
   link = null;
   game = null;
+  solo = null;
+  thinking = false;
   peerHere = false;
   stopMedia();
   showRemote(null);
@@ -217,10 +222,13 @@ function toLobby(error = '') {
   setLobby('idle', error);
 }
 
+const pickedSide = () => Number(document.querySelector('input[name="side"]:checked')?.value ?? 0);
+
 $('start-form').addEventListener('submit', (event) => {
   event.preventDefault();
   host = true;
-  me = Number(new FormData(event.target).get('side'));
+  solo = null;
+  me = pickedSide();
   code = newCode();
   connect();
 });
@@ -255,6 +263,82 @@ if (navigator.share) {
   });
 }
 
+// ── Playing the computer ─────────────────────────────────────────────────────
+let level = 'intermediate';
+try { if (LEVELS.some((l) => l.id === localStorage.getItem('bg-level'))) level = localStorage.getItem('bg-level'); } catch {}
+
+LEVELS.forEach((l, k) => {
+  const label = document.createElement('label');
+  label.className = 'level';
+  const radio = Object.assign(document.createElement('input'), { type: 'radio', name: 'level', value: l.id, checked: l.id === level });
+  const bars = document.createElement('span');
+  bars.className = 'bars';
+  bars.setAttribute('aria-hidden', 'true');
+  for (let n = 0; n < LEVELS.length; n++) {
+    const bar = document.createElement('i');
+    if (n <= k) bar.className = 'on';
+    bars.append(bar);
+  }
+  label.append(radio, bars, l.name);
+  radio.addEventListener('change', () => {
+    level = l.id;
+    try { localStorage.setItem('bg-level', level); } catch {}
+    showBlurb();
+  });
+  $('level-list').append(label);
+});
+const levelInfo = () => LEVELS.find((l) => l.id === (solo ?? level));
+const showBlurb = () => { $('level-blurb').textContent = levelInfo().blurb; };
+showBlurb();
+
+$('cpu-form').addEventListener('submit', (event) => {
+  event.preventDefault();
+  host = true;
+  solo = level;
+  me = pickedSide();
+  startGame();
+});
+
+/** The computer's turn: roll, think, then play its moves one hop at a time. */
+async function computerTurn() {
+  const current = game;
+  const still = () => game === current && solo;
+  thinking = true;
+  if (game.phase === 'roll') {
+    await sleep(600);
+    if (!still()) return;
+    BG.roll(game, [BG.rollDie(), BG.rollDie()]);
+    await tumble();
+    if (!still()) return;
+  }
+  render();
+  await sleep(450);
+  if (!still()) return;
+  const started = performance.now();
+  const moves = chooseMoves(game.board, game.turn, game.dice, solo);
+  await sleep(Math.max(0, 350 - (performance.now() - started)));
+  for (const move of moves) {
+    if (!still()) return;
+    const legal = BG.currentMoves(game).find((m) => m.from === move.from && m.to === move.to && m.die === move.die);
+    if (!legal) break;
+    BG.play(game, legal);
+    render();
+    if (game.phase === 'over') break;
+    await sleep(560);
+  }
+  if (!still()) return;
+  if (game.phase === 'move') {
+    // Anything the plan couldn't place (it shouldn't happen) is played in order.
+    let left;
+    while ((left = BG.currentMoves(game)).length) BG.play(game, left[0]);
+    await sleep(350);
+    if (!still()) return;
+    BG.endTurn(game);
+  }
+  thinking = false;
+  render();
+}
+
 // Tell the other player when this tab goes away for good.
 addEventListener('pagehide', (event) => { if (!event.persisted) link?.close(); });
 
@@ -271,11 +355,20 @@ function startGame() {
 /** Put a game on screen. A fresh one opens with each player rolling one die. */
 async function begin(fresh) {
   const current = game;
-  rolling = moving = false;
+  rolling = moving = thinking = false;
   selected = null;
   celebrated = false;
   show('game');
   board.setView(me);
+  $('game').classList.toggle('solo', Boolean(solo));
+  $('social').hidden = Boolean(solo);
+  $('solo-note').hidden = !solo;
+  $('link-state').hidden = Boolean(solo);
+  document.querySelector('#seat-them .seat-name').textContent = solo ? `Computer · ${levelInfo().name}` : 'Opponent';
+  if (solo) {
+    $('solo-note').replaceChildren(`🤖 Playing the computer`, Object.assign(document.createElement('small'), { textContent: `${levelInfo().name}: ${levelInfo().blurb}` }));
+  }
+  $('leave-text').textContent = solo ? 'This game ends here.' : 'The game ends for both of you and can’t be resumed.';
   $('chip-me').className = `chip-face ${me ? 'b' : 'a'}`;
   $('chip-them').className = `chip-face ${me ? 'a' : 'b'}`;
   if (!fresh) return render();
@@ -324,12 +417,13 @@ function render() {
   $('done').hidden = !(myTurn && phase === 'move' && !busy && !moves.length);
 
   let status = '';
+  const them = solo ? 'The computer' : 'Your opponent';
   if (phase === 'roll') {
-    status = myTurn ? 'Your turn. Roll the dice.' : 'Waiting for your opponent to roll…';
+    status = myTurn ? 'Your turn. Roll the dice.' : solo ? 'The computer is rolling…' : 'Waiting for your opponent to roll…';
   } else if (phase === 'move' && rolling) {
     status = game.opening ? 'Opening roll: highest goes first…' : 'Rolling…';
   } else if (phase === 'move' && !myTurn) {
-    status = game.opening ? 'Your opponent won the opening roll.' : 'Your opponent is moving…';
+    status = game.opening && !game.history.length ? `${them} won the opening roll.` : solo ? 'The computer is moving…' : 'Your opponent is moving…';
   } else if (phase === 'move' && moves.length) {
     status = game.opening && !game.history.length ? 'You won the opening roll. Your move.' : 'Your move.';
   } else if (phase === 'move' && !moving) {
@@ -350,6 +444,7 @@ function render() {
 
   $('over').hidden = phase !== 'over';
   if (phase === 'over') celebrate();
+  if (solo && !myTurn && phase !== 'over' && !busy && !thinking) computerTurn();
 }
 
 function onPick(where) {
@@ -410,6 +505,7 @@ $('done').addEventListener('click', () => {
 
 $('again').addEventListener('click', () => {
   if (game?.phase !== 'over') return;
+  if (solo) return startGame();
   if (host) return peerHere ? startGame() : toast('Your opponent isn’t connected.');
   send({ t: 'again' });
   toast('Asked your opponent’s browser for a new game…');
@@ -418,7 +514,7 @@ $('again').addEventListener('click', () => {
 function celebrate() {
   const won = game.winner === me;
   const kind = BG.winKind(game.board, game.winner);
-  $('over-title').textContent = won ? 'You win! 🎉' : 'Your opponent wins';
+  $('over-title').textContent = won ? 'You win! 🎉' : solo ? 'The computer wins' : 'Your opponent wins';
   $('over-sub').textContent = kind === 'single' ? (won ? 'Nicely played.' : 'Good game. Fancy a rematch?')
     : `That’s a ${kind}${won ? '!' : '. Ouch.'}`;
   if (celebrated) return;

@@ -369,7 +369,7 @@ a { color: var(--violet); }
 
 /* ── Side panel: video and chat ── */
 .side { display: grid; gap: .8rem; padding: .9rem; border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow); }
-.side > *, .chat > * { min-inline-size: 0; }
+.side > *, .social > *, .chat > * { min-inline-size: 0; }
 .videos { position: relative; display: grid; gap: .5rem; }
 .videos[data-them="off"][data-me="off"], .videos[data-them="off"][data-me="mic"] { display: none; }
 .tile { position: relative; border-radius: 18px; overflow: hidden; background: #0d0a1c; aspect-ratio: 4 / 3; }
@@ -502,3 +502,30 @@ body:has(#lobby[hidden]) .copyright { display: none; }
 .dir-option:has(input:checked) { border-color: var(--violet); background: var(--surface-2); }
 .dir-option:has(input:focus-visible) { outline: 3px solid var(--violet); outline-offset: 3px; }
 .dir-icon { font-size: 1.6rem; line-height: 1; color: var(--violet); flex: none; }
+
+/* ── Playing the computer ── */
+.levels legend { font-weight: 800; padding: 0; margin-block-end: .6rem; }
+.level-list { display: flex; flex-wrap: wrap; gap: .4rem; }
+.level {
+  position: relative; display: inline-flex; align-items: center; gap: .35rem;
+  min-block-size: 2.4rem; padding: .3rem .85rem; border: 2px solid var(--line); border-radius: 999px;
+  font-weight: 700; font-size: .92rem; cursor: pointer; transition: border-color .15s, background-color .15s;
+}
+.level input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.level:has(input:checked) { border-color: var(--violet); background: var(--surface-2); }
+.level:has(input:focus-visible) { outline: 3px solid var(--violet); outline-offset: 3px; }
+.level .bars { display: inline-flex; align-items: end; gap: 2px; block-size: .8rem; }
+.level .bars i { inline-size: 3px; border-radius: 2px; background: var(--line); }
+.level .bars i:nth-child(1) { block-size: 30%; }
+.level .bars i:nth-child(2) { block-size: 47%; }
+.level .bars i:nth-child(3) { block-size: 64%; }
+.level .bars i:nth-child(4) { block-size: 82%; }
+.level .bars i:nth-child(5) { block-size: 100%; }
+.level .bars i.on { background: var(--violet); }
+.level-blurb { margin-block-start: .5rem; font-size: .88rem; color: var(--ink-soft); min-block-size: 1.3em; }
+.cpu-btn { border-color: var(--violet); }
+.solo-note { font-weight: 700; }
+.solo-note small { display: block; font-weight: 500; color: var(--ink-soft); }
+.social { display: grid; gap: .8rem; }
+#setup { display: grid; gap: 1rem; }
+#setup > * { min-inline-size: 0; }

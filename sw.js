@@ -5,6 +5,7 @@
 const CACHE = "bg-v1";
 const PRECACHE = [
   "./",
+  "./ai.js",
   "./app.js",
   "./board.js",
   "./game.js",

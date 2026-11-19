@@ -2,6 +2,8 @@
 
 Peer-to-peer backgammon for two, played in the browser at [mco.dev/bg](https://mco.dev/bg/). Start a game, share the code with a friend and roll; there is nothing to sign up for, and you can turn on video or chat while you play.
 
+You can also play the computer at five strengths, Beginner to Expert. `ai.js` lists every position a roll can reach, scores each with a hand-written evaluation (pips, points, primes, anchors, and the chance and cost of being hit) and plays the best; the weaker levels add random noise to the scores, and Expert also looks one roll ahead at your best reply.
+
 It is a static app with no build step: open `index.html` from any web server. The two players connect directly to each other using [PeerJS](https://peerjs.com/) (vendored in `vendor/`).
 
 This repo is mounted in [mco-gh/mco.dev](https://github.com/mco-gh/mco.dev) as a git submodule at `static/bg`. After pushing a change here, update the submodule pointer there to publish it:
