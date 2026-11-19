@@ -171,6 +171,20 @@
   <dialog id="settings" class="sheet" aria-labelledby="settings-title" closedby="any">
     <h2 id="settings-title">Settings</h2>
 
+    <fieldset class="direction">
+      <legend>Move your checkers</legend>
+      <label class="dir-option">
+        <input type="radio" name="direction" value="ccw">
+        <span class="dir-icon" aria-hidden="true">↺</span>
+        <span><strong>Counter-clockwise</strong><br><small>Home at the bottom right</small></span>
+      </label>
+      <label class="dir-option">
+        <input type="radio" name="direction" value="cw">
+        <span class="dir-icon" aria-hidden="true">↻</span>
+        <span><strong>Clockwise</strong><br><small>Home at the bottom left</small></span>
+      </label>
+    </fieldset>
+
     <fieldset class="themes">
       <legend>Themes</legend>
       <div class="theme-list" id="theme-list"></div>
@@ -185,7 +199,7 @@
       <label><input type="color" data-color="pointB"><span>Points, second color</span></label>
       <label><input type="color" data-color="frame"><span>Frame</span></label>
     </fieldset>
-    <p class="help">Colors are saved in this browser. Your opponent picks their own.</p>
+    <p class="help">Saved in this browser. Your opponent picks their own direction and colors, and you can change them mid-game.</p>
 
     <div class="sheet-actions">
       <button class="btn primary" type="button" data-close autofocus>Done</button>
@@ -206,7 +220,7 @@
 
     <h3>Playing</h3>
     <ul>
-      <li>Your home is the bottom right. Move your checkers around the board towards it, then bear them off into the tray.</li>
+      <li>Your home is at the bottom of the board: on the right if you move counter-clockwise, on the left if you move clockwise (choose in Settings). Move your checkers around the board towards it, then bear them off into the tray.</li>
       <li>Roll, then tap a glowing checker and tap where it should land. You can chain both dice in one tap.</li>
       <li>Land on a single opposing checker to send it to the bar. A point with two or more is closed to you.</li>
       <li>You must use as many dice as you can. <strong>Undo</strong> takes a move back; <strong>Done</strong> ends your turn.</li>
@@ -217,7 +231,7 @@
     <p>Turn on your camera or microphone at any time during a game, or just type. Each of you decides separately what to share.</p>
 
     <h3>Privacy</h3>
-    <p>BG is a static page. A public <a href="https://peerjs.com/" target="_blank" rel="noopener">PeerJS</a> server introduces your two browsers using the game code; after that, moves, chat, video and audio travel directly between you over WebRTC. Nothing is recorded, and only your color settings are saved, in this browser.</p>
+    <p>BG is a static page. A public <a href="https://peerjs.com/" target="_blank" rel="noopener">PeerJS</a> server introduces your two browsers using the game code; after that, moves, chat, video and audio travel directly between you over WebRTC. Nothing is recorded, and only your settings are saved, in this browser.</p>
 
     <div class="sheet-actions">
       <button class="btn primary" type="button" data-close autofocus>Got it</button>

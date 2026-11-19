@@ -57,6 +57,23 @@ for (const input of document.querySelectorAll('[data-color]')) {
 }
 applyColors();
 
+// ── Direction of play ────────────────────────────────────────────────────────
+// Purely a matter of how this player sees the board: clockwise mirrors it left
+// to right, so their home is bottom left. The game and the messages are unchanged.
+let clockwise = false;
+try { clockwise = localStorage.getItem('bg-direction') === 'cw'; } catch {}
+for (const radio of document.querySelectorAll('input[name="direction"]')) {
+  radio.checked = radio.value === (clockwise ? 'cw' : 'ccw');
+  radio.addEventListener('change', () => {
+    clockwise = radio.value === 'cw';
+    try { localStorage.setItem('bg-direction', radio.value); } catch {}
+    preview.setView(0, clockwise);
+    preview.showDice([6, 5]);
+    board.setView(me, clockwise);
+    render();
+  });
+}
+
 // ── State ────────────────────────────────────────────────────────────────────
 let link = null;          // the connection, or null
 let host = false;
@@ -72,6 +89,8 @@ let celebrated = false;
 
 const board = new Board($('board'), onPick);
 const preview = new Board($('preview'));
+preview.setView(0, clockwise);
+board.setView(0, clockwise);
 preview.sync(BG.startingBoard(), { instant: true });
 preview.showDice([6, 5]);
 

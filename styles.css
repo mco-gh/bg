@@ -488,3 +488,17 @@ dialog.sheet[open] { display: grid; gap: .9rem; }
 .copyright { margin: 0; padding: 1.5rem 1rem calc(1.5rem + env(safe-area-inset-bottom, 0px)); text-align: center; font-size: 0.8rem; color: var(--ink-soft); }
 /* Only on the start screen: during a game or call the main view fills the window. */
 body:has(#lobby[hidden]) .copyright { display: none; }
+
+/* ── Direction of play ── */
+.direction { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: .5rem; }
+.direction legend { padding: 0; margin-block-end: .5rem; }
+.dir-option {
+  position: relative; display: flex; align-items: center; gap: .6rem;
+  padding: .55rem .8rem; border: 2px solid var(--line); border-radius: 18px; cursor: pointer;
+  line-height: 1.3; transition: border-color .15s, background-color .15s;
+}
+.dir-option small { color: var(--ink-soft); font-size: .8rem; }
+.dir-option input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.dir-option:has(input:checked) { border-color: var(--violet); background: var(--surface-2); }
+.dir-option:has(input:focus-visible) { outline: 3px solid var(--violet); outline-offset: 3px; }
+.dir-icon { font-size: 1.6rem; line-height: 1; color: var(--violet); flex: none; }

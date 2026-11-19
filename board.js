@@ -12,6 +12,7 @@ const BAR_X = 675;
 const TRAY_X = 1350;
 const DIE = 76;
 const TUMBLE_MS = 750;
+const WIDTH = 1500;
 
 const el = (tag, className, parent) => {
   const node = document.createElement(tag);
@@ -33,14 +34,16 @@ export class Board {
     this.checkers = [];
     this.arrivals = 0;
     this.diceTimer = 0;
+    this.clockwise = false;
+    this.fixed = [];          // [node, box] for the parts that never move, except when mirrored
     root.classList.add('board');
     root.replaceChildren();
 
     for (const [x, w] of [[HALF_X.left, 600], [HALF_X.right, 600]]) {
-      place(el('div', 'felt', root), { x, y: TOP, w, h: BOTTOM - TOP });
+      this.fixed.push([el('div', 'felt', root), { x, y: TOP, w, h: BOTTOM - TOP }]);
     }
-    place(el('div', 'felt well', root), { x: TRAY_X, y: TOP, w: 120, h: 440 });
-    place(el('div', 'felt well', root), { x: TRAY_X, y: BOTTOM - 440, w: 120, h: 440 });
+    this.fixed.push([el('div', 'felt well', root), { x: TRAY_X, y: TOP, w: 120, h: 440 }]);
+    this.fixed.push([el('div', 'felt well', root), { x: TRAY_X, y: BOTTOM - 440, w: 120, h: 440 }]);
 
     this.spots = el('div', 'spots', root);
     const button = (className, where) => {
@@ -52,8 +55,8 @@ export class Board {
     this.points = Array.from({ length: 24 }, (_, i) => button('spot point', i));
     this.barSpot = button('spot bar-spot', 'bar');
     this.offSpot = button('spot off-spot', 'off');
-    place(this.barSpot, { x: BAR_X - 45, y: TOP, w: 90, h: 460 });
-    place(this.offSpot, { x: TRAY_X, y: BOTTOM - 440, w: 120, h: 440 });
+    this.fixed.push([this.barSpot, { x: BAR_X - 45, y: TOP, w: 90, h: 460 }]);
+    this.fixed.push([this.offSpot, { x: TRAY_X, y: BOTTOM - 440, w: 120, h: 440 }]);
 
     this.ghosts = el('div', 'ghosts', root);
     this.ghosts.setAttribute('aria-hidden', 'true');
@@ -71,9 +74,15 @@ export class Board {
     this.setView(0);
   }
 
-  /** Turn the board so that side's home is at the bottom right. */
-  setView(me) {
+  /**
+   * Turn the board so that side's home is at the bottom: on the right when they
+   * move counter-clockwise (the default), on the left when they move clockwise.
+   * Only this player's screen changes; the game itself is the same either way.
+   */
+  setView(me, clockwise = this.clockwise) {
     this.me = me;
+    this.clockwise = clockwise;
+    for (const [node, box] of this.fixed) place(node, this.#mirror(box, box.w));
     const order = [this.barSpot];
     for (let pos = 24; pos >= 1; pos--) {
       const index = me === 0 ? pos - 1 : 24 - pos;
@@ -82,11 +91,17 @@ export class Board {
       point.classList.toggle('top', top);
       point.classList.toggle('bottom', !top);
       point.classList.toggle('alt', pos % 2 === 0);
-      place(point, { x: this.#column(pos), y: top ? TOP : BOTTOM - 450, w: 100, h: 450 });
+      place(point, this.#mirror({ x: this.#column(pos), y: top ? TOP : BOTTOM - 450, w: 100, h: 450 }, 100));
       order.push(point);
     }
     order.push(this.offSpot);
     this.spots.replaceChildren(...order);
+    if (this.board) this.sync(this.board, { instant: true });
+  }
+
+  /** A box as laid out for counter-clockwise play, flipped left to right for clockwise. */
+  #mirror(box, width) {
+    return this.clockwise ? { ...box, x: WIDTH - box.x - width } : box;
   }
 
   #column(pos) {
@@ -98,18 +113,18 @@ export class Board {
   #slot(where, side, j, n) {
     const mine = side === this.me;
     if (where === 'off') {
-      return { x: TRAY_X + 10, y: mine ? BOTTOM - 34 - j * 27 : TOP + 10 + j * 27 };
+      return this.#mirror({ x: TRAY_X + 10, y: mine ? BOTTOM - 34 - j * 27 : TOP + 10 + j * 27 }, 100);
     }
     if (where === 'bar') {
       const step = Math.min(70, 330 / Math.max(1, n - 1));
-      return { x: BAR_X - CHECKER / 2, y: mine ? 396 - j * step : 520 + j * step };
+      return this.#mirror({ x: BAR_X - CHECKER / 2, y: mine ? 396 - j * step : 520 + j * step }, CHECKER);
     }
     const pos = posOf(this.me, where);
     const step = n <= 5 ? CHECKER : (5 * CHECKER - CHECKER) / (n - 1);
-    return {
+    return this.#mirror({
       x: this.#column(pos) + (100 - CHECKER) / 2,
       y: pos >= 13 ? TOP + j * step : BOTTOM - CHECKER - j * step,
-    };
+    }, CHECKER);
   }
 
   /**
@@ -223,7 +238,7 @@ export class Board {
       let x;
       if (owner === 'split') x = centre[k === this.me ? 'me' : 'them'] - DIE / 2;
       else x = centre[owner] + (k - (values.length - 1) / 2) * (DIE + 16) - DIE / 2;
-      place(die, { x, y: 500 - DIE / 2 });
+      place(die, this.#mirror({ x, y: 500 - DIE / 2 }, DIE));
       die.dataset.v = values[k];
       die.classList.toggle('used', Boolean(used[k]));
       die.classList.remove('tumble');
