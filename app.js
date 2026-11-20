@@ -773,3 +773,19 @@ if (location.hash.length > 1) {
   $('join-code').value = cleanCode(location.hash);
   join(location.hash);
 }
+
+// ── Appearance: System, Light or Dark, saved in this browser. The choice is written
+// to <meta name="color-scheme">, which the stylesheet follows. ──
+{
+  const schemeMeta = document.querySelector('meta[name="color-scheme"]');
+  for (const input of document.querySelectorAll('input[name="scheme"]')) {
+    input.checked = input.value === schemeMeta.content;
+    input.addEventListener('change', () => {
+      schemeMeta.content = input.value;
+      try {
+        if (input.value === 'light dark') localStorage.removeItem('bg-scheme');
+        else localStorage.setItem('bg-scheme', input.value);
+      } catch { /* the choice still applies for this visit */ }
+    });
+  }
+}

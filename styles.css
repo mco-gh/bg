@@ -533,3 +533,16 @@ body:has(#lobby[hidden]) .copyright { display: none; }
 /* Back to the list of all of Marc's apps, on its own line under the credit. */
 .apps-link { display: block; inline-size: fit-content; margin-block-start: 0.15rem; white-space: nowrap; }
 .apps-link svg { display: inline; inline-size: 1.05em; block-size: 1.05em; margin-inline-end: 0.25em; vertical-align: -0.18em; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Appearance: the setting writes <meta name="color-scheme">; map it back so light-dark() follows it. */
+:root:has(> head > meta[name="color-scheme"][content="light"]) { color-scheme: light; }
+:root:has(> head > meta[name="color-scheme"][content="dark"]) { color-scheme: dark; }
+/* The background blobs are fainter in dark mode, whichever way it was chosen. */
+:root:has(> head > meta[name="color-scheme"][content="light"]) .blobs i { opacity: .5; }
+:root:has(> head > meta[name="color-scheme"][content="dark"]) .blobs i { opacity: .16; }
+.segmented { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 4px; border-radius: 999px; background: var(--surface-2); }
+.segmented label { position: relative; display: grid; }
+.segmented input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.segmented span { display: grid; place-items: center; min-block-size: 2.5rem; padding: 0 .4rem; border-radius: 999px; font-weight: 700; font-size: .92rem; color: var(--ink-soft); }
+.segmented input:checked + span { background: var(--surface); color: var(--ink); box-shadow: 0 1px 4px rgb(0 0 0 / .15); }
+.segmented input:focus-visible + span { outline: 3px solid var(--violet); outline-offset: 1px; }

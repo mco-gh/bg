@@ -6,6 +6,7 @@
   <title>BG — backgammon with a friend, anywhere</title>
   <meta name="description" content="Play backgammon online with a friend. No sign-up: start a game, share the code and roll. Peer to peer, with optional video and chat.">
   <meta name="color-scheme" content="light dark">
+  <script>try { const s = localStorage.getItem('bg-scheme'); if (s === 'light' || s === 'dark') document.querySelector('meta[name="color-scheme"]').content = s; } catch {}</script>
   <meta name="theme-color" content="#fff4e4" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#17122b" media="(prefers-color-scheme: dark)">
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
@@ -187,6 +188,11 @@
   <!-- ───────────── Settings ───────────── -->
   <dialog id="settings" class="sheet" aria-labelledby="settings-title" closedby="any">
     <h2 id="settings-title">Settings</h2>
+
+    <fieldset class="scheme-pick">
+      <legend>Appearance</legend>
+      <div class="segmented"><label><input type="radio" name="scheme" value="light dark"><span>System</span></label><label><input type="radio" name="scheme" value="light"><span>Light</span></label><label><input type="radio" name="scheme" value="dark"><span>Dark</span></label></div>
+    </fieldset>
 
     <fieldset class="direction">
       <legend>Move your checkers</legend>
